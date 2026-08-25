@@ -1,0 +1,36 @@
+# Local governance and internal workflow
+AGENTS.md
+CLAUDE.md
+STAGE-1.md
+STAGE-2.md
+SPECIFICATION.md
+CONTEXT.md
+DESIGN.md
+internal/
+.hallmark/
+
+# Secrets and local deployment state
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+# Frontend
+node_modules/
+dist/
+coverage/
+*.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
