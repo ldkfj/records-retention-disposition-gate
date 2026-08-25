@@ -1,0 +1,112 @@
+:root {
+  /* Surface & Background */
+  --bg-app: #f7f5f0;
+  --bg-card: #ffffff;
+  --bg-surface: #efece6;
+  --bg-subtle: #f0ede6;
+  --bg-dialog: #ffffff;
+
+  /* Ink & Typography */
+  --text-main: #1a1918;
+  --text-muted: #4a4845;
+  --text-subtle: #6c6965;
+  --text-inverse: #ffffff;
+
+  /* Borders & Dividers */
+  --border-color: #d8d3c8;
+  --border-subtle: #e5e0d5;
+  --border-dark: #8c857b;
+  --border-focus: #1b365d;
+
+  /* Brand Navy Primary */
+  --navy-primary: #1b365d;
+  --navy-hover: #132642;
+  --navy-active: #0c182a;
+  --navy-light: #e8edf4;
+  --navy-subtle: #f1f4f8;
+
+  /* Restrained Amber Warning / Holds */
+  --amber-primary: #9a5b00;
+  --amber-bg: #fef7ed;
+  --amber-border: #d97706;
+  --amber-dark: #78350f;
+
+  /* Forest Green Authorization (Exclusive) */
+  --green-primary: #1b663e;
+  --green-bg: #edf7f0;
+  --green-border: #2e8555;
+  --green-dark: #144d2e;
+
+  /* Error / Danger */
+  --danger-primary: #a81c1c;
+  --danger-bg: #fdf2f2;
+  --danger-border: #e02424;
+
+  /* Status Badges */
+  --badge-draft-bg: #f1f5f9;
+  --badge-draft-txt: #334155;
+  --badge-draft-border: #cbd5e1;
+
+  --badge-frozen-bg: #e0f2fe;
+  --badge-frozen-txt: #0369a1;
+  --badge-frozen-border: #7dd3fc;
+
+  --badge-mapped-bg: #eff6ff;
+  --badge-mapped-txt: #1e40af;
+  --badge-mapped-border: #93c5fd;
+
+  --badge-reclass-bg: #fff7ed;
+  --badge-reclass-txt: #c2410c;
+  --badge-reclass-border: #fdba74;
+
+  --badge-unres-bg: #fef7ed;
+  --badge-unres-txt: #9a5b00;
+  --badge-unres-border: #fcd34d;
+
+  --badge-retaining-bg: #eef2ff;
+  --badge-retaining-txt: #4338ca;
+  --badge-retaining-border: #a5b4fc;
+
+  --badge-eligible-bg: #f0fdfa;
+  --badge-eligible-txt: #0f766e;
+  --badge-eligible-border: #5eead4;
+
+  --badge-requested-bg: #faf5ff;
+  --badge-requested-txt: #7e22ce;
+  --badge-requested-border: #d8b4fe;
+
+  --badge-auth-bg: #edf7f0;
+  --badge-auth-txt: #1b663e;
+  --badge-auth-border: #86efac;
+
+  --badge-hold-bg: #fef7ed;
+  --badge-hold-txt: #9a5b00;
+  --badge-hold-border: #fcd34d;
+
+  --badge-super-bg: #f3e8ff;
+  --badge-super-txt: #6b21a8;
+  --badge-super-border: #d8b4fe;
+
+  /* Typography */
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Focus ring */
+  --focus-ring: 2px solid var(--border-focus);
+  --focus-offset: 2px;
+}

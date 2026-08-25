@@ -1,0 +1,170 @@
+export type ProfileState =
+  | 'DRAFT'
+  | 'FROZEN'
+  | 'MAPPED'
+  | 'RECLASSIFY_REQUIRED'
+  | 'HOLD_UNRESOLVED'
+  | 'RETAINING'
+  | 'REVIEW_ELIGIBLE'
+  | 'REVIEW_REQUESTED'
+  | 'TRANSFER_AUTHORIZED'
+  | 'DISPOSITION_AUTHORIZED'
+  | 'HOLD'
+  | 'SUPERSEDED';
+
+export type MappingOutcome =
+  | 'TEMPORARY_ITEM_MATCH'
+  | 'PERMANENT_ITEM_MATCH'
+  | 'EXCLUDED_OR_WRONG_SCHEDULE'
+  | 'MULTIPLE_PLAUSIBLE_ITEMS'
+  | 'UNRESOLVED';
+
+export type DispositionClass = 'TEMPORARY' | 'PERMANENT' | 'NOT_APPLICABLE';
+
+export type CutoffTrigger =
+  | 'FINAL_PAYMENT_OR_CANCELLATION'
+  | 'BUSINESS_USE_CEASES'
+  | 'NONE';
+
+export type ReviewAction =
+  | 'NONE'
+  | 'AUTHORIZE_TRANSFER'
+  | 'AUTHORIZE_DISPOSITION'
+  | 'HOLD'
+  | 'RECLASSIFY';
+
+export type TemplateType =
+  | 'PROCUREMENT_WORKING_FILES'
+  | 'ADMINISTRATIVE_POLICY_FILES';
+
+export type GrsFamily = 'GRS_1_1' | 'GRS_5_1';
+
+export interface ProcurementAttributes {
+  record_copy_status: 'OFFICIAL_RECORD' | 'ADMIN_REFERENCE_COPY';
+  procurement_type?: 'FORMAL_CONTRACT' | 'SIMPLIFIED_ACQUISITION' | 'MICRO_PURCHASE';
+  is_formal_contract?: boolean;
+  contract_concluded?: boolean;
+  includes_unsuccessful_bids?: boolean;
+  scope_level?: 'WORKING_PAPERS' | 'ADMINISTRATIVE';
+}
+
+export interface AdministrativePolicyAttributes {
+  policy_scope?: 'OFFICE_UNIT_LEVEL';
+  record_level?: 'OFFICE_UNIT';
+  is_agency_directive?: boolean;
+  is_routine_administrative?: boolean;
+}
+
+export interface ProfileRecord {
+  profile_id: number;
+  client_nonce: string;
+  template: TemplateType;
+  attributes_json: string;
+  creation_date: string;
+  cutoff_date: string;
+  grs_family: GrsFamily;
+  custodian: string;
+  officer: string;
+  state: ProfileState;
+  mapping_attempts: number;
+  last_attempt_timestamp: string;
+  successor_id: number;
+  audit_hold_active: boolean;
+  audit_hold_reason: string;
+  audit_hold_timestamp: string;
+  fingerprint: string;
+}
+
+export interface MappingRecord {
+  profile_id: number;
+  outcome: MappingOutcome;
+  schedule_number: string;
+  schedule_title: string;
+  schedule_version: string;
+  pdf_url: string;
+  pdf_fingerprint: string;
+  item: string;
+  disposition_authority: string;
+  page: string;
+  is_included: boolean;
+  is_excluded: boolean;
+  disposition_class: DispositionClass;
+  cutoff_trigger: CutoffTrigger;
+  retention_months: number;
+  consequential_fingerprint: string;
+  reason_code: string;
+  earliest_review_date: string;
+  is_accepted: boolean;
+  accepted_by: string;
+  accepted_timestamp: string;
+}
+
+export interface ReviewRecord {
+  profile_id: number;
+  review_requested: boolean;
+  requested_by: string;
+  requested_timestamp: string;
+  is_decided: boolean;
+  action: ReviewAction;
+  reason_code: string;
+  decided_by: string;
+  decided_timestamp: string;
+}
+
+export interface EventRecord {
+  event_id: number;
+  profile_id: number;
+  event_type: string;
+  actor: string;
+  details: string;
+  timestamp: string;
+}
+
+export interface SourceMetadata {
+  template: string;
+  grs_family: string;
+  schedule_number: string;
+  schedule_title: string;
+  schedule_version: string;
+  pdf_url: string;
+}
+
+export interface EIP6963ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: string;
+  rdns: string;
+}
+
+export interface EIP6963ProviderDetail {
+  info: EIP6963ProviderInfo;
+  provider: any;
+}
+
+export interface WalletState {
+  connected: boolean;
+  address: string | null;
+  chainId: number | null;
+  provider: any | null;
+  providerName: string | null;
+  isCorrectChain: boolean;
+}
+
+export type TxStep =
+  | 'IDLE'
+  | 'SIGNING'
+  | 'SUBMITTED'
+  | 'CONSENSUS_POLLING'
+  | 'READBACK'
+  | 'SUCCESS'
+  | 'ERROR';
+
+export interface PendingOperation {
+  id: string;
+  type: string;
+  timestamp: number;
+  params: Record<string, any>;
+  txHash?: string;
+  status: 'PRE_SIGN' | 'SUBMITTED' | 'FAILED';
+  error?: string;
+}
