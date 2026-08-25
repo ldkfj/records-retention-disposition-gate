@@ -1609,8 +1609,14 @@ Return JSON with exact keys:
     @gl.public.view
     def get_profile_id_by_nonce(self, owner: str, client_nonce: str) -> u256:
         owner_norm = _validate_actor_address(owner, "OWNER")
+        if not isinstance(client_nonce, str) or not NONCE_RE.fullmatch(client_nonce):
+            raise gl.vm.UserError("INVALID_CLIENT_NONCE")
         key = f"{owner_norm}:{client_nonce}"
         return int(self.nonce_to_profile_id.get(key, 0))
+
+    @gl.public.view
+    def is_nonce_used(self, owner: str, client_nonce: str) -> bool:
+        return self.get_profile_id_by_nonce(owner, client_nonce) != 0
 
     @gl.public.view
     def get_profile_id_by_fingerprint(self, fingerprint: str) -> u256:

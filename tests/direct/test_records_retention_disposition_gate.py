@@ -177,6 +177,8 @@ def test_create_profile_procurement_official_record_success(
     assert p["grs_family"] == "GRS_1_1"
     assert p["is_frozen"] is False
     assert contract.get_profile_id_by_nonce(p["owner"], "nonce-proc-001") == 1
+    assert contract.is_nonce_used(p["owner"], "nonce-proc-001") is True
+    assert contract.is_nonce_used(p["owner"], "unused-nonce") is False
 
 
 def test_create_profile_procurement_admin_reference_copy_success(
