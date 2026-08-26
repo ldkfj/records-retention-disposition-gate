@@ -18,6 +18,8 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST REVIEW PENDING`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.
 
+The final procurement acceptance correction is transaction `0x0b52ec29ff869c50cd40fa61b0a8b98c7d696effae976b2c2bdd937faf0a681c`; finalized readback confirms profile 1 is mapping-accepted. The earlier malformed call is retained in `docs/VERIFICATION.md` as negative diagnostic evidence, not as a successful acceptance.
+
 ## Upgrade model and rehearsal
 
 The constructor registers the locked upgrader in `gl.storage.Root.get().upgraders`; only a registered upgrader may replace Root Slot code. Storage fields must not be removed, reordered, or retyped without an explicit migration plan and fresh review.

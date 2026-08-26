@@ -20,7 +20,8 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 
 All listed writes used Normal / Full Consensus. Required successful transactions reached `FINALIZED`, `MAJORITY_AGREE`, execution `SUCCESS`, and were followed by authoritative finalized-state reads.
 
-- Procurement profile: create/freeze/assess produced `TEMPORARY_ITEM_MATCH` for GRS 1.1.010; officer acceptance, audit hold, and hold clearing succeeded.
+- Procurement profile: create/freeze/assess produced `TEMPORARY_ITEM_MATCH` for GRS 1.1.010; audit hold and hold clearing succeeded. An earlier malformed acceptance call, `0x763be832877f479391d78bb021720c913153336cc48391a5fc2d68ba676e2486`, finalized with execution `ERROR` / `PROFILE_NOT_FOUND` and made no state change.
+- Correct officer acceptance: `0x0b52ec29ff869c50cd40fa61b0a8b98c7d696effae976b2c2bdd937faf0a681c` called `accept_mapping(1)` and reached `FINALIZED`, `MAJORITY_AGREE`, leader execution `SUCCESS`. Finalized `get_mapping(1)` returned `is_accepted=true`, `accepted_at=2026-08-26T18:23:04.504969Z`; finalized `get_profile(1)` returned `is_mapping_accepted=true` and state `MAPPED`.
 - Office-policy retry `0x0fd0094a684a6cd8da4303ea29dcb4162f03401b22958893a0dfe4546553ede5` produced attempt 2 `TEMPORARY_ITEM_MATCH`, GRS 5.1.010, authority `DAA-GRS-2016-0016-0001`.
 - Officer acceptance: `0xa3ab359700a5ef1d543da31a5ed77f3e7ec8a15d7a1a4354530d9961ecd37c7c`.
 - Wrong-role/order guards: officer request `0x7135ea6accd0b18410d6badf008aa47a01a295c0ba8ff4be5315e6b9172bdcc3` and premature decision `0x67b3f98ec7ad82cfd5dc6590e8376173259f3751b55ead00c28f2f41b790feaa` finalized without mutation.
