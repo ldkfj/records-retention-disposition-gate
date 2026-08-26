@@ -4,15 +4,22 @@ import sys
 
 import pytest
 
-MOCK_PDF_URL_PROCUREMENT = "https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf"
-MOCK_PDF_URL_ADMIN = "https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf"
-MOCK_PROCUREMENT_RENDER = b"General Records Schedule 1.1 Financial Management and Reporting Records DAA-GRS-2013-0003-0001 DAA-GRS-2013-0003-0002"
-MOCK_ADMIN_RENDER = b"General Records Schedule 5.1 Common Office Records DAA-GRS-2016-0016-0001 office-level administrative policies"
+MOCK_CSV_URL = "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv"
+MOCK_PDF_URL_PROCUREMENT = MOCK_CSV_URL
+MOCK_PDF_URL_ADMIN = MOCK_CSV_URL
+
+MOCK_NARA_CSV = (
+    "﻿GRS ID,Record Title,Classification (General),Legal Citation,Disposition,Retention (Years),Retention Type,Event Type (General),Longer Retention Authorized?,Deviations Allowed?,Disposition Authority,Superseded by,Last Updated,Comments\n"
+    'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,28 U.S. Code 2401(a),Temporary,6,Event_Age,Final action ,Yes,Yes,DAA-GRS-2013-0003-0001,,12/2021,\n'
+    'GRS 1.1.011,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - All other copies (Copies used for administrative or reference purposes)",Financial Management,28 U.S. Code 2401(a),Temporary,0,Event_Age,No longer needed,N/A,Yes,DAA-GRS-2013-0003-0002,,12/2021,\n'
+    'GRS 5.1.010,Administrative records maintained in any agency office,Common Office Records,,Temporary,0,Event_Age,No longer needed,N/A,Yes,DAA-GRS-2016-0016-0001,,12/2021,\n'
+)
+MOCK_NARA_CSV_BYTES = MOCK_NARA_CSV.encode("utf-8")
 
 
 def _mock_pdf_and_llm(
     direct_vm,
-    pdf_url: str,
+    pdf_url: str = MOCK_CSV_URL,
     outcome: str = "TEMPORARY_ITEM_MATCH",
     schedule_number: str = "GRS 1.1",
     schedule_title: str = "Financial Management and Reporting Records",
@@ -36,7 +43,7 @@ def _mock_pdf_and_llm(
     direct_vm._llm_mocks_hit.clear()
 
     if pdf_bytes is None:
-        pdf_bytes = MOCK_PROCUREMENT_RENDER if pdf_url == MOCK_PDF_URL_PROCUREMENT else MOCK_ADMIN_RENDER
+        pdf_bytes = MOCK_NARA_CSV_BYTES
 
     direct_vm.mock_web(
         pdf_url,
@@ -561,7 +568,7 @@ def test_assess_mapping_procurement_official_record_72_months(
         cutoff_trigger="FINAL_PAYMENT_OR_CANCELLATION",
         retention_months=72,
         reason_code="OFFICIAL_RECORD_MATCH",
-        pdf_bytes=MOCK_PROCUREMENT_RENDER + b"X" * 265000,
+        pdf_bytes=MOCK_NARA_CSV_BYTES,
     )
 
     direct_vm._datetime = "2024-07-01T12:00:00Z"
@@ -661,7 +668,7 @@ def test_assess_mapping_admin_policy_office_unit_0_months(
         cutoff_trigger="BUSINESS_USE_CEASES",
         retention_months=0,
         reason_code="OFFICE_UNIT_POLICY_MATCH",
-        pdf_bytes=MOCK_ADMIN_RENDER + b"Y" * 77000,
+        pdf_bytes=MOCK_NARA_CSV_BYTES,
     )
 
     direct_vm._datetime = "2024-09-01T12:00:00Z"
@@ -924,11 +931,13 @@ def test_evidence_size_bound_below_at_above_cap(
     )
     contract.freeze_profile(1)
 
-    # 1. Below cap (265,306 bytes - actual GRS 1.1 size)
+    # 1. Below cap (89,237 bytes - measured live NARA CSV size)
+    pad_89k = b"\n# pad line\n" * ((89_237 - len(MOCK_NARA_CSV_BYTES)) // 12)
+    pad_89k += b"#" * (89_237 - len(MOCK_NARA_CSV_BYTES) - len(pad_89k))
     _mock_pdf_and_llm(
         direct_vm,
         pdf_url=MOCK_PDF_URL_PROCUREMENT,
-        pdf_bytes=MOCK_PROCUREMENT_RENDER + b"A" * (265_306 - len(MOCK_PROCUREMENT_RENDER)),
+        pdf_bytes=MOCK_NARA_CSV_BYTES + pad_89k,
     )
     direct_vm._datetime = "2024-07-01T12:00:00Z"
     outcome = contract.assess_mapping(1)
@@ -945,10 +954,12 @@ def test_evidence_size_bound_below_at_above_cap(
         officer,
     )
     contract.freeze_profile(2)
+    pad_350k = b"\n# pad line\n" * ((350_000 - len(MOCK_NARA_CSV_BYTES)) // 12)
+    pad_350k += b"#" * (350_000 - len(MOCK_NARA_CSV_BYTES) - len(pad_350k))
     _mock_pdf_and_llm(
         direct_vm,
         pdf_url=MOCK_PDF_URL_PROCUREMENT,
-        pdf_bytes=MOCK_PROCUREMENT_RENDER + b"B" * (350_000 - len(MOCK_PROCUREMENT_RENDER)),
+        pdf_bytes=MOCK_NARA_CSV_BYTES + pad_350k,
     )
     outcome2 = contract.assess_mapping(2)
     assert outcome2 == "TEMPORARY_ITEM_MATCH"
@@ -964,6 +975,8 @@ def test_evidence_size_bound_below_at_above_cap(
         officer,
     )
     contract.freeze_profile(3)
+    pad_350k_plus = b"\n# pad line\n" * ((350_001 - len(MOCK_NARA_CSV_BYTES)) // 12)
+    pad_350k_plus += b"#" * (350_001 - len(MOCK_NARA_CSV_BYTES) - len(pad_350k_plus))
     _mock_pdf_and_llm(
         direct_vm,
         pdf_url=MOCK_PDF_URL_PROCUREMENT,
@@ -976,7 +989,7 @@ def test_evidence_size_bound_below_at_above_cap(
         item_number="",
         disposition_authority="",
         page_or_section="",
-        pdf_bytes=MOCK_PROCUREMENT_RENDER + b"C" * (350_001 - len(MOCK_PROCUREMENT_RENDER)),
+        pdf_bytes=MOCK_NARA_CSV_BYTES + pad_350k_plus,
     )
     outcome3 = contract.assess_mapping(3)
     assert outcome3 == "UNRESOLVED"
@@ -984,7 +997,7 @@ def test_evidence_size_bound_below_at_above_cap(
     assert "EVIDENCE_EXCEEDS_SIZE_LIMIT" in m3["reason_code"]
 
 
-def test_rendered_source_identity_and_exact_llm_keys_fail_closed(
+def test_rendered_source_empty_and_identity_and_exact_llm_keys_fail_closed(
     direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
 ):
     contract = _deploy(direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie)
@@ -992,18 +1005,115 @@ def test_rendered_source_identity_and_exact_llm_keys_fail_closed(
     officer = ("0x" + bytes(direct_charlie).hex()).lower()
     attrs = json.dumps({"record_copy_status": "OFFICIAL_RECORD"})
 
-    contract.create_profile("nonce-render-identity", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-01", "2024-06-30", "GRS_1_1", officer)
+    # Empty render defect reproduction
+    contract.create_profile("nonce-render-empty", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-01", "2024-06-30", "GRS_1_1", officer)
     contract.freeze_profile(1)
-    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=b"unrelated PDF bytes")
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=b"   ")
     direct_vm._datetime = "2024-07-01T12:00:00Z"
     assert contract.assess_mapping(1) == "UNRESOLVED"
-    assert "SOURCE_RENDER_IDENTITY_MISMATCH" in contract.get_mapping(1)["reason_code"]
+    assert "SOURCE_RENDER_EMPTY" in contract.get_mapping(1)["reason_code"]
 
-    contract.create_profile("nonce-extra-llm-key", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-02", "2024-06-30", "GRS_1_1", officer)
+    contract.create_profile("nonce-render-identity", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-02", "2024-06-30", "GRS_1_1", officer)
     contract.freeze_profile(2)
-    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, extra_llm_fields={"unexpected": "value"})
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=b"unrelated content without required CSV headers")
     assert contract.assess_mapping(2) == "UNRESOLVED"
-    assert "INVALID_LLM_RESPONSE_KEYS" in contract.get_mapping(2)["reason_code"]
+    assert "INVALID_CSV_HEADER" in contract.get_mapping(2)["reason_code"]
+
+    contract.create_profile("nonce-extra-llm-key", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-03", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(3)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, extra_llm_fields={"unexpected": "value"})
+    assert contract.assess_mapping(3) == "UNRESOLVED"
+    assert "INVALID_LLM_RESPONSE_KEYS" in contract.get_mapping(3)["reason_code"]
+
+
+def test_csv_validation_failure_modes_and_dynamic_variance(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = _deploy(direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie)
+    direct_vm.sender = direct_alice
+    officer = ("0x" + bytes(direct_charlie).hex()).lower()
+    attrs = json.dumps({"record_copy_status": "OFFICIAL_RECORD"})
+
+    # 1. Missing required row GRS 1.1.011 in Procurement
+    csv_missing_row = (
+        "GRS ID,Record Title,Classification (General),Disposition,Retention (Years),Event Type (General),Disposition Authority\n"
+        'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,Temporary,6,Final action,DAA-GRS-2013-0003-0001\n'
+    )
+    contract.create_profile("nonce-csv-missing-row", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-01", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(1)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=csv_missing_row.encode("utf-8"))
+    direct_vm._datetime = "2024-07-01T12:00:00Z"
+    assert contract.assess_mapping(1) == "UNRESOLVED"
+    assert "MISSING_REQUIRED_CSV_ROWS" in contract.get_mapping(1)["reason_code"]
+
+    # 2. Duplicate CSV row
+    csv_duplicate_row = (
+        "GRS ID,Record Title,Classification (General),Disposition,Retention (Years),Event Type (General),Disposition Authority\n"
+        'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,Temporary,6,Final action,DAA-GRS-2013-0003-0001\n'
+        'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,Temporary,6,Final action,DAA-GRS-2013-0003-0001\n'
+        'GRS 1.1.011,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - All other copies (Copies used for administrative or reference purposes)",Financial Management,Temporary,0,No longer needed,DAA-GRS-2013-0003-0002\n'
+    )
+    contract.create_profile("nonce-csv-dup-row", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-02", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(2)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=csv_duplicate_row.encode("utf-8"))
+    assert contract.assess_mapping(2) == "UNRESOLVED"
+    assert "DUPLICATE_CSV_ROW" in contract.get_mapping(2)["reason_code"]
+
+    # 3. Conflicting / Invalid Authority in CSV row
+    csv_wrong_authority = (
+        "GRS ID,Record Title,Classification (General),Disposition,Retention (Years),Event Type (General),Disposition Authority\n"
+        'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,Temporary,6,Final action,WRONG-AUTHORITY-999\n'
+        'GRS 1.1.011,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - All other copies (Copies used for administrative or reference purposes)",Financial Management,Temporary,0,No longer needed,DAA-GRS-2013-0003-0002\n'
+    )
+    contract.create_profile("nonce-csv-wrong-auth", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-03", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(3)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=csv_wrong_authority.encode("utf-8"))
+    assert contract.assess_mapping(3) == "UNRESOLVED"
+    assert "INVALID_CSV_ROW" in contract.get_mapping(3)["reason_code"]
+
+    # 4. Dynamic non-target CSV rows and whitespace variance (passes deterministically)
+    csv_dynamic_variance = (
+        "\n\nGRS ID, Record Title , Classification (General) , Disposition , Retention (Years) , Event Type (General) , Disposition Authority , Unused Extra Col\n"
+        'GRS 1.1.010,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",Financial Management,Temporary,6,Final action ,DAA-GRS-2013-0003-0001,extra_data\n'
+        'GRS 2.1.010,"Employee records",Human Resources,Temporary,3,Separation,DAA-GRS-2014-0001-0001,irrelevant\n'
+        'GRS 1.1.011,"Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - All other copies (Copies used for administrative or reference purposes)",Financial Management,Temporary,0,No longer needed,DAA-GRS-2013-0003-0002,more_extra\n'
+    )
+    contract.create_profile("nonce-csv-dynamic-variance", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-04", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(4)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=csv_dynamic_variance.encode("utf-8"))
+    assert contract.assess_mapping(4) == "TEMPORARY_ITEM_MATCH"
+    m4 = contract.get_mapping(4)
+    assert m4["item_number"] == "010"
+    assert m4["disposition_authority"] == "DAA-GRS-2013-0003-0001"
+
+    # 5. Invalid UTF-8 must fail closed instead of being silently replaced.
+    contract.create_profile("nonce-csv-invalid-utf8", "PROCUREMENT_WORKING_FILES", attrs, "2024-01-05", "2024-06-30", "GRS_1_1", officer)
+    contract.freeze_profile(5)
+    _mock_pdf_and_llm(direct_vm, MOCK_PDF_URL_PROCUREMENT, pdf_bytes=MOCK_NARA_CSV_BYTES + b"\xff")
+    assert contract.assess_mapping(5) == "UNRESOLVED"
+    assert "SOURCE_FETCH_ERROR:UnicodeDecodeError" in contract.get_mapping(5)["reason_code"]
+
+
+def test_source_metadata_manifest_parity(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = _deploy(direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie)
+
+    meta_proc = contract.get_source_metadata("PROCUREMENT_WORKING_FILES")
+    assert meta_proc["schedule_number"] == "GRS 1.1"
+    assert meta_proc["schedule_title"] == "Financial Management and Reporting Records"
+    assert meta_proc["schedule_version"] == "Transmittal 31 / April 2020"
+    assert meta_proc["source_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv"
+    assert meta_proc["csv_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv"
+    assert meta_proc["pdf_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf"
+
+    meta_admin = contract.get_source_metadata("ADMINISTRATIVE_POLICY_FILES")
+    assert meta_admin["schedule_number"] == "GRS 5.1"
+    assert meta_admin["schedule_title"] == "Common Office Records"
+    assert meta_admin["schedule_version"] == "Transmittal 28 / July 2017"
+    assert meta_admin["source_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv"
+    assert meta_admin["csv_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv"
+    assert meta_admin["pdf_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf"
 
 
 def test_retry_cooldown_enforcement(
@@ -1384,13 +1494,17 @@ def test_source_metadata_views(
     assert meta_proc["schedule_number"] == "GRS 1.1"
     assert meta_proc["schedule_title"] == "Financial Management and Reporting Records"
     assert meta_proc["schedule_version"] == "Transmittal 31 / April 2020"
-    assert meta_proc["pdf_url"] == MOCK_PDF_URL_PROCUREMENT
+    assert meta_proc["source_url"] == MOCK_PDF_URL_PROCUREMENT
+    assert meta_proc["csv_url"] == MOCK_PDF_URL_PROCUREMENT
+    assert meta_proc["pdf_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf"
 
     meta_admin = contract.get_source_metadata("ADMINISTRATIVE_POLICY_FILES")
     assert meta_admin["schedule_number"] == "GRS 5.1"
     assert meta_admin["schedule_title"] == "Common Office Records"
     assert meta_admin["schedule_version"] == "Transmittal 28 / July 2017"
-    assert meta_admin["pdf_url"] == MOCK_PDF_URL_ADMIN
+    assert meta_admin["source_url"] == MOCK_PDF_URL_ADMIN
+    assert meta_admin["csv_url"] == MOCK_PDF_URL_ADMIN
+    assert meta_admin["pdf_url"] == "https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf"
 
 
 def test_review_action_reclassify_branch(

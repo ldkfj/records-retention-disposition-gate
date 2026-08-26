@@ -31,6 +31,8 @@ export const OFFICIAL_NARA_SOURCES = {
     scheduleNumber: 'GRS 1.1',
     scheduleTitle: 'Financial Management and Reporting Records',
     scheduleVersion: 'Transmittal 31 / April 2020',
+    sourceUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+    csvUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
     pdfUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
     items: [
       {
@@ -57,6 +59,8 @@ export const OFFICIAL_NARA_SOURCES = {
     scheduleNumber: 'GRS 5.1',
     scheduleTitle: 'Common Office Records',
     scheduleVersion: 'Transmittal 28 / July 2017',
+    sourceUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+    csvUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
     pdfUrl: 'https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf',
     items: [
       {

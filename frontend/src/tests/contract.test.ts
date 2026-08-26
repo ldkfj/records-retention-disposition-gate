@@ -87,7 +87,7 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
           schedule_version: 'Transmittal 31 / April 2020',
-          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
+          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
           pdf_fingerprint: 'pdf_fp',
           item: '010',
           disposition_authority: 'DAA-GRS-2013-0003-0001',
@@ -125,6 +125,8 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
           schedule_version: 'Transmittal 31 / April 2020',
+          source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+          csv_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
           pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
         };
       }

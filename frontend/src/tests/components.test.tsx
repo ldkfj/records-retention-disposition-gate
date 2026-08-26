@@ -177,7 +177,7 @@ describe('UI Components & Screen Journeys', () => {
       schedule_number: 'GRS 1.1',
       schedule_title: 'Financial Management and Reporting Records',
       schedule_version: 'Transmittal 31 / April 2020',
-      pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
+      pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
       pdf_fingerprint: 'pdf_fp',
       item: '010',
       disposition_authority: 'DAA-GRS-2013-0003-0001',
@@ -341,7 +341,7 @@ describe('UI Components & Screen Journeys', () => {
       schedule_number: 'GRS 1.1',
       schedule_title: 'Financial Management',
       schedule_version: 'Transmittal 31 / April 2020',
-      pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
+      pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
       pdf_fingerprint: 'pdf_fp',
       item: '010',
       disposition_authority: 'DAA-GRS-2013-0003-0001',
@@ -469,7 +469,7 @@ describe('UI Components & Screen Journeys', () => {
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
           schedule_version: 'Transmittal 31 / April 2020',
-          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
+          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
         };
       }
       return {
@@ -478,7 +478,7 @@ describe('UI Components & Screen Journeys', () => {
         schedule_number: 'GRS 5.1',
         schedule_title: 'Common Office Records',
         schedule_version: 'Transmittal 28 / July 2017',
-        pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf',
+        pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
       };
     });
 

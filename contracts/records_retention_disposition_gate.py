@@ -1,5 +1,6 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
+import csv
 import hashlib
 import json
 import re
@@ -91,6 +92,8 @@ SCHEDULE_SOURCE_INFO = {
         "schedule_number": "GRS 1.1",
         "schedule_title": "Financial Management and Reporting Records",
         "schedule_version": "Transmittal 31 / April 2020",
+        "source_url": "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv",
+        "csv_url": "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv",
         "pdf_url": "https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf",
     },
     TEMPLATE_ADMIN_POLICY: {
@@ -99,6 +102,8 @@ SCHEDULE_SOURCE_INFO = {
         "schedule_number": "GRS 5.1",
         "schedule_title": "Common Office Records",
         "schedule_version": "Transmittal 28 / July 2017",
+        "source_url": "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv",
+        "csv_url": "https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv",
         "pdf_url": "https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf",
     },
 }
@@ -490,7 +495,7 @@ def _validate_mapping_result_schema(raw: dict, expected_info: dict | None = None
             raise gl.vm.UserError("SCHEDULE_TITLE_MISMATCH")
         if schedule_version != expected_info["schedule_version"]:
             raise gl.vm.UserError("SCHEDULE_VERSION_MISMATCH")
-        if source_url != expected_info["pdf_url"]:
+        if source_url != expected_info.get("source_url") and source_url != expected_info.get("pdf_url"):
             raise gl.vm.UserError("SOURCE_URL_MISMATCH")
 
     if outcome in {OUTCOME_TEMPORARY_ITEM_MATCH, OUTCOME_PERMANENT_ITEM_MATCH}:
@@ -585,20 +590,107 @@ def _compare_consequential_fields(leader: dict, validator: dict) -> bool:
     return True
 
 
-def _validate_rendered_schedule_text(template: str, rendered_text: str) -> str:
-    if not isinstance(rendered_text, str) or not rendered_text.strip():
+def _parse_and_validate_nara_csv(csv_text: str, template: str) -> dict[str, dict[str, str]]:
+    if not isinstance(csv_text, str) or not csv_text.strip():
         raise gl.vm.UserError("SOURCE_RENDER_EMPTY")
-    if len(rendered_text) > MAX_RENDERED_TEXT_CHARS:
+    if len(csv_text) > MAX_RENDERED_TEXT_CHARS:
         raise gl.vm.UserError("SOURCE_RENDER_EXCEEDS_SIZE_LIMIT")
-    normalized = " ".join(rendered_text.split()).lower()
-    required_markers = (
-        ("general records schedule 1.1", "financial management and reporting records", "daa-grs-2013-0003-0001", "daa-grs-2013-0003-0002")
+
+    csv.field_size_limit(MAX_RENDERED_TEXT_CHARS)
+    reader = csv.reader(csv_text.splitlines())
+    raw_header = None
+    for row in reader:
+        if row and any(h.strip() for h in row):
+            raw_header = row
+            break
+    if raw_header is None:
+        raise gl.vm.UserError("INVALID_CSV_HEADER")
+
+    header = [h.strip().lstrip("﻿") for h in raw_header]
+    required_cols = {
+        "GRS ID",
+        "Record Title",
+        "Classification (General)",
+        "Disposition",
+        "Retention (Years)",
+        "Event Type (General)",
+        "Disposition Authority",
+    }
+    if not required_cols.issubset(set(header)):
+        raise gl.vm.UserError("INVALID_CSV_HEADER")
+
+    col_idx = {h: i for i, h in enumerate(header)}
+    expected_rows = (
+        {
+            "GRS 1.1.010": (
+                "Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - Official record held in the office of record",
+                "Financial Management", "Temporary", "6", "Final action", "DAA-GRS-2013-0003-0001",
+            ),
+            "GRS 1.1.011": (
+                "Financial transaction records related to procuring goods and services, paying bills, collecting debts, and accounting - All other copies (Copies used for administrative or reference purposes)",
+                "Financial Management", "Temporary", "0", "No longer needed", "DAA-GRS-2013-0003-0002",
+            ),
+        }
         if template == TEMPLATE_PROCUREMENT
-        else ("general records schedule 5.1", "common office records", "daa-grs-2016-0016-0001", "office-level administrative policies")
+        else {
+            "GRS 5.1.010": (
+                "Administrative records maintained in any agency office",
+                "Common Office Records", "Temporary", "0", "No longer needed", "DAA-GRS-2016-0016-0001",
+            )
+        }
     )
-    if any(marker not in normalized for marker in required_markers):
-        raise gl.vm.UserError("SOURCE_RENDER_IDENTITY_MISMATCH")
-    return rendered_text
+    target_ids = set(expected_rows)
+    found_rows: dict[str, dict[str, str]] = {}
+
+    for row in reader:
+        if not row or not any(row):
+            continue
+        if len(row) <= max(col_idx.values()):
+            continue
+        grs_id = row[col_idx["GRS ID"]].strip().lstrip("﻿")
+        if grs_id in target_ids:
+            if grs_id in found_rows:
+                raise gl.vm.UserError(f"DUPLICATE_CSV_ROW:{grs_id}")
+
+            title = row[col_idx["Record Title"]].strip()
+            classification = row[col_idx["Classification (General)"]].strip()
+            disposition = row[col_idx["Disposition"]].strip()
+            retention_years = row[col_idx["Retention (Years)"]].strip()
+            event_type = row[col_idx["Event Type (General)"]].strip()
+            authority = row[col_idx["Disposition Authority"]].strip()
+            if (title, classification, disposition, retention_years, event_type, authority) != expected_rows[grs_id]:
+                raise gl.vm.UserError(f"INVALID_CSV_ROW:{grs_id}")
+
+            found_rows[grs_id] = {
+                "grs_id": grs_id,
+                "title": title,
+                "classification": classification,
+                "disposition": disposition,
+                "retention_years": retention_years,
+                "event_type": event_type,
+                "authority": authority,
+            }
+
+    if set(found_rows.keys()) != target_ids:
+        raise gl.vm.UserError("MISSING_REQUIRED_CSV_ROWS")
+
+    return found_rows
+
+
+def _format_csv_evidence_for_prompt(rows: dict[str, dict[str, str]]) -> str:
+    parts = []
+    for grs_id in sorted(rows.keys()):
+        r = rows[grs_id]
+        parts.append(
+            f"Item: {r['grs_id']}\n"
+            f"  Record Title: {r['title']}\n"
+            f"  Classification: {r['classification']}\n"
+            f"  Disposition: {r['disposition']}\n"
+            f"  Retention (Years): {r['retention_years']}\n"
+            f"  Event Type: {r['event_type']}\n"
+            f"  Disposition Authority: {r['authority']}"
+        )
+    return "\n\n".join(parts)
 
 
 def _validate_candidate_against_profile(candidate: dict, template: str, attributes_json: str) -> dict:
@@ -767,26 +859,27 @@ class RecordsRetentionDispositionGate(gl.Contract):
         cutoff_date: str,
     ) -> dict:
         info = SCHEDULE_SOURCE_INFO[template]
-        pdf_url = info["pdf_url"]
+        source_url = info["source_url"]
+        source_fingerprint = ""
 
         try:
-            response = gl.nondet.web.request(pdf_url, method="GET")
+            response = gl.nondet.web.request(source_url, method="GET")
             status_code = getattr(response, "status_code", getattr(response, "status", None))
             if status_code != 200 or not response.body:
-                return _unresolved_mapping_result(info, pdf_url, "SOURCE_UNAVAILABLE_OR_EMPTY")
+                return _unresolved_mapping_result(info, source_url, "SOURCE_UNAVAILABLE_OR_EMPTY")
             if len(response.body) > MAX_EVIDENCE_BYTES:
-                return _unresolved_mapping_result(info, pdf_url, "EVIDENCE_EXCEEDS_SIZE_LIMIT")
-            pdf_fingerprint = hashlib.sha256(response.body).hexdigest()
-            rendered_text = _validate_rendered_schedule_text(
-                template, gl.nondet.web.render(pdf_url, mode="text")
-            )
+                return _unresolved_mapping_result(info, source_url, "EVIDENCE_EXCEEDS_SIZE_LIMIT")
+            source_fingerprint = hashlib.sha256(response.body).hexdigest()
+            csv_text = response.body.decode("utf-8")
+            parsed_rows = _parse_and_validate_nara_csv(csv_text, template)
+            rendered_text = _format_csv_evidence_for_prompt(parsed_rows)
         except gl.vm.UserError as exc:
             return _unresolved_mapping_result(
-                info, pdf_url, getattr(exc, "message", "SOURCE_RENDER_ERROR")
+                info, source_url, getattr(exc, "message", "SOURCE_PARSE_ERROR"), source_fingerprint
             )
         except Exception as exc:  # noqa: BLE001
             return _unresolved_mapping_result(
-                info, pdf_url, f"SOURCE_FETCH_ERROR:{type(exc).__name__}"
+                info, source_url, f"SOURCE_FETCH_ERROR:{type(exc).__name__}", source_fingerprint
             )
 
         prompt = f"""You are an independent records retention schedule mapping consensus validator for NARA GRS.
@@ -804,8 +897,8 @@ Official NARA Schedule Evidence:
 Schedule Number: {info["schedule_number"]}
 Schedule Title: {info["schedule_title"]}
 Schedule Version: {info["schedule_version"]}
-Source URL: {pdf_url}
-PDF Digest: {pdf_fingerprint}
+Source URL: {source_url}
+Content Digest: {source_fingerprint}
 
 <evidence>
 {rendered_text}
@@ -828,8 +921,8 @@ Return JSON with exact keys:
   "schedule_number": "{info["schedule_number"]}",
   "schedule_title": "{info["schedule_title"]}",
   "schedule_version": "{info["schedule_version"]}",
-  "source_url": "{pdf_url}",
-  "pdf_fingerprint": "{pdf_fingerprint}",
+  "source_url": "{source_url}",
+  "pdf_fingerprint": "{source_fingerprint}",
   "item_number": "010 | 011 | ...",
   "disposition_authority": "DAA-GRS-...",
   "page_or_section": "...",
@@ -846,7 +939,7 @@ Return JSON with exact keys:
             decoded = gl.nondet.exec_prompt(prompt, response_format="json")
             if not isinstance(decoded, dict):
                 return _unresolved_mapping_result(
-                    info, pdf_url, "INVALID_LLM_RESPONSE_TYPE", pdf_fingerprint
+                    info, source_url, "INVALID_LLM_RESPONSE_TYPE", source_fingerprint
                 )
 
             expected_llm_keys = {
@@ -869,7 +962,7 @@ Return JSON with exact keys:
             }
             if set(decoded.keys()) != expected_llm_keys:
                 return _unresolved_mapping_result(
-                    info, pdf_url, "INVALID_LLM_RESPONSE_KEYS", pdf_fingerprint
+                    info, source_url, "INVALID_LLM_RESPONSE_KEYS", source_fingerprint
                 )
 
             candidate_dict = {
@@ -894,7 +987,7 @@ Return JSON with exact keys:
             return _validate_candidate_against_profile(candidate, template, attributes_json)
         except Exception as exc:  # noqa: BLE001
             return _unresolved_mapping_result(
-                info, pdf_url, f"LLM_OR_VALIDATION_ERROR:{type(exc).__name__}", pdf_fingerprint
+                info, source_url, f"LLM_OR_VALIDATION_ERROR:{type(exc).__name__}", source_fingerprint
             )
 
     @gl.public.write
@@ -1633,6 +1726,8 @@ Return JSON with exact keys:
             "schedule_number": info["schedule_number"],
             "schedule_title": info["schedule_title"],
             "schedule_version": info["schedule_version"],
+            "source_url": info["source_url"],
+            "csv_url": info["csv_url"],
             "pdf_url": info["pdf_url"],
         }
 
