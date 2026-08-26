@@ -981,7 +981,25 @@ Return JSON with exact keys:
                 "disposition_class": decoded["disposition_class"],
                 "cutoff_trigger": decoded["cutoff_trigger"],
                 "retention_months": decoded["retention_months"],
-                "consequential_fingerprint": decoded["consequential_fingerprint"],
+                # Validators decide the bounded mapping fields; the contract derives
+                # their cryptographic commitment deterministically. Requiring an LLM
+                # to reproduce SHA-256 makes valid mappings fail closed arbitrarily.
+                "consequential_fingerprint": _compute_consequential_fingerprint(
+                    decoded["outcome"],
+                    decoded["schedule_number"],
+                    decoded["schedule_title"],
+                    decoded["schedule_version"],
+                    decoded["source_url"],
+                    decoded["pdf_fingerprint"],
+                    decoded["item_number"],
+                    decoded["disposition_authority"],
+                    decoded["page_or_section"],
+                    decoded["is_included"],
+                    decoded["is_excluded"],
+                    decoded["disposition_class"],
+                    decoded["cutoff_trigger"],
+                    decoded["retention_months"],
+                ),
                 "reason_code": decoded["reason_code"],
             }
             candidate = _validate_mapping_result_schema(candidate_dict, info)
