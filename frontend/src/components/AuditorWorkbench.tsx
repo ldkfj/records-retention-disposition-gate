@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { contractService } from '../services/contractService.ts';
 import { walletService } from '../services/walletService.ts';
 import { ProfileRecord, TxStep } from '../types/domain.ts';
+import { formatShortAddress } from '../utils/formatters.ts';
 
 const MAX_SELECTABLE_PROFILES = 16;
 
@@ -143,7 +144,7 @@ export const AuditorWorkbench: React.FC<AuditorWorkbenchProps> = ({
       <div className="card-header">
         <h2 className="card-title">Auditor Workbench & Inspection Holds</h2>
         <span className="mono" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Configured Auditor: {auditorAddress ? `${auditorAddress.slice(0, 6)}...${auditorAddress.slice(-4)}` : 'Loading...'}
+          Configured Auditor: {formatShortAddress(auditorAddress, 'Loading...')}
         </span>
       </div>
       <p className="card-desc">
@@ -152,7 +153,7 @@ export const AuditorWorkbench: React.FC<AuditorWorkbenchProps> = ({
 
       {!isConfiguredAuditor && (
         <div className="alert-banner alert-warning">
-          <strong>Auditor Role Notice:</strong> Your connected wallet ({walletState.address ? `${walletState.address.slice(0, 6)}...` : 'Disconnected'}) does not match the configured contract auditor address (<span className="mono">{auditorAddress}</span>). Audit hold actions will fail authorization.
+          <strong>Auditor Role Notice:</strong> Your connected wallet ({formatShortAddress(walletState.address, 'Disconnected')}) does not match the configured contract auditor address (<span className="mono">{auditorAddress || '—'}</span>). Audit hold actions will fail authorization.
         </div>
       )}
 
@@ -225,15 +226,15 @@ export const AuditorWorkbench: React.FC<AuditorWorkbenchProps> = ({
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Creation / Cutoff:</span>
-                <span className="dossier-value mono">{selectedProfile.creation_date} &rarr; {selectedProfile.cutoff_date}</span>
+                <span className="dossier-value mono">{(selectedProfile.creation_date || '—')} &rarr; {(selectedProfile.cutoff_date || '—')}</span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Custodian:</span>
-                <span className="dossier-value mono">{selectedProfile.custodian}</span>
+                <span className="dossier-value mono">{selectedProfile.custodian || '—'}</span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Records Officer:</span>
-                <span className="dossier-value mono">{selectedProfile.officer}</span>
+                <span className="dossier-value mono">{selectedProfile.officer || '—'}</span>
               </div>
             </div>
 
@@ -243,9 +244,9 @@ export const AuditorWorkbench: React.FC<AuditorWorkbenchProps> = ({
                 <span className="dossier-value">
                   {selectedProfile.audit_hold_active ? (
                     <span style={{ color: 'var(--amber-primary)', fontWeight: 600 }}>
-                      ACTIVE (Reason: {selectedProfile.audit_hold_reason})
+                      ACTIVE (Reason: {selectedProfile.audit_hold_reason || 'None specified'})
                       <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Placed on: {selectedProfile.audit_hold_timestamp}
+                        Placed on: {selectedProfile.audit_hold_timestamp || 'Timestamp not exposed by contract'}
                       </span>
                     </span>
                   ) : (

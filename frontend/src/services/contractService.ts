@@ -10,10 +10,266 @@ import {
   EventRecord,
   SourceMetadata,
   ProfileState,
+  MappingOutcome,
+  DispositionClass,
+  CutoffTrigger,
+  ReviewAction,
+  TemplateType,
+  GrsFamily,
   TxStep,
   PendingOperation,
-  ReviewAction,
 } from '../types/domain.ts';
+
+export function normalizeProfileRecord(raw: any): ProfileRecord {
+  if (raw === null || raw === undefined) {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Profile record is null or undefined');
+  }
+  let data = raw;
+  if (typeof raw === 'string') {
+    try {
+      data = JSON.parse(raw);
+    } catch (e: any) {
+      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed profile JSON (${e?.message || 'parse error'})`);
+    }
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Profile record is not an object');
+  }
+
+  const profileId = Number(data.profile_id ?? data.id ?? 0);
+  const clientNonce = String(data.client_nonce ?? data.nonce ?? '');
+  const template = (data.template || 'PROCUREMENT_WORKING_FILES') as TemplateType;
+  const attributesJson =
+    typeof data.attributes_json === 'string'
+      ? data.attributes_json
+      : JSON.stringify(data.attributes_json || {});
+  const creationDate = String(data.creation_date || '');
+  const cutoffDate = String(data.cutoff_date || '');
+  const grsFamily = (data.grs_family || (template === 'PROCUREMENT_WORKING_FILES' ? 'GRS_1_1' : 'GRS_5_1')) as GrsFamily;
+  const custodian = String(data.owner ?? data.custodian ?? '');
+  const officer = String(data.officer || '');
+  const state = (data.state || 'DRAFT') as ProfileState;
+  const isFrozen = Boolean(data.is_frozen ?? (state !== 'DRAFT'));
+  const mappingAttempts = Number(data.mapping_attempts || 0);
+  const mappingOutcome = String(data.mapping_outcome || '');
+  const isMappingAccepted = Boolean(data.is_mapping_accepted);
+  const lastAttemptTimestamp = String(data.last_attempt_timestamp || '');
+  const successorId = Number(data.superseded_by ?? data.successor_id ?? 0);
+  const supersedes = Number(data.supersedes || 0);
+  const auditHoldActive = Boolean(data.audit_hold ?? data.audit_hold_active ?? false);
+  const auditHoldReason = String(data.audit_hold_reason || '');
+  const auditHoldTimestamp = String(data.audit_hold_timestamp || '');
+  const fingerprint = String(data.fingerprint || '');
+  const reviewRequested = Boolean(data.review_requested);
+  const reviewRequestedAt = String(data.review_requested_at || '');
+  const reviewDecided = Boolean(data.review_decided);
+  const reviewAction = (data.review_action || 'NONE') as ReviewAction;
+  const reviewReason = String(data.review_reason || '');
+
+  return {
+    profile_id: profileId,
+    client_nonce: clientNonce,
+    template,
+    attributes_json: attributesJson,
+    creation_date: creationDate,
+    cutoff_date: cutoffDate,
+    grs_family: grsFamily,
+    custodian,
+    owner: custodian,
+    officer,
+    state,
+    is_frozen: isFrozen,
+    mapping_attempts: mappingAttempts,
+    mapping_outcome: mappingOutcome,
+    is_mapping_accepted: isMappingAccepted,
+    last_attempt_timestamp: lastAttemptTimestamp,
+    successor_id: successorId,
+    superseded_by: successorId,
+    supersedes,
+    audit_hold_active: auditHoldActive,
+    audit_hold: auditHoldActive,
+    audit_hold_reason: auditHoldReason,
+    audit_hold_timestamp: auditHoldTimestamp,
+    fingerprint,
+    review_requested: reviewRequested,
+    review_requested_at: reviewRequestedAt,
+    review_decided: reviewDecided,
+    review_action: reviewAction,
+    review_reason: reviewReason,
+  };
+}
+
+export function normalizeMappingRecord(raw: any): MappingRecord {
+  if (raw === null || raw === undefined) {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Mapping record is null or undefined');
+  }
+  let data = raw;
+  if (typeof raw === 'string') {
+    try {
+      data = JSON.parse(raw);
+    } catch (e: any) {
+      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed mapping JSON (${e?.message || 'parse error'})`);
+    }
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Mapping record is not an object');
+  }
+
+  const profileId = Number(data.profile_id ?? 0);
+  const attempt = Number(data.attempt ?? 0);
+  const outcome = (data.outcome || 'UNRESOLVED') as MappingOutcome;
+  const scheduleNumber = String(data.schedule_number || '');
+  const scheduleTitle = String(data.schedule_title || '');
+  const scheduleVersion = String(data.schedule_version || '');
+  const sourceUrl = String(data.source_url ?? data.pdf_url ?? '');
+  const pdfUrl = String(data.pdf_url ?? data.source_url ?? '');
+  const pdfFingerprint = String(data.pdf_fingerprint || '');
+  const item = String(data.item_number ?? data.item ?? '');
+  const dispositionAuthority = String(data.disposition_authority || '');
+  const page = String(data.page_or_section ?? data.page ?? '');
+  const isIncluded = Boolean(data.is_included);
+  const isExcluded = Boolean(data.is_excluded);
+  const dispositionClass = (data.disposition_class || 'NOT_APPLICABLE') as DispositionClass;
+  const cutoffTrigger = (data.cutoff_trigger || 'NONE') as CutoffTrigger;
+  const retentionMonths = Number(data.retention_months || 0);
+  const consequentialFingerprint = String(data.consequential_fingerprint || '');
+  const reasonCode = String(data.reason_code || '');
+  const earliestReviewDate = String(data.earliest_review_date || '');
+  const assessedAt = String(data.assessed_at || '');
+  const isAccepted = Boolean(data.is_accepted);
+  const acceptedBy = String(data.accepted_by || '');
+  const acceptedTimestamp = String(data.accepted_at ?? data.accepted_timestamp ?? '');
+
+  return {
+    profile_id: profileId,
+    attempt,
+    outcome,
+    schedule_number: scheduleNumber,
+    schedule_title: scheduleTitle,
+    schedule_version: scheduleVersion,
+    source_url: sourceUrl,
+    pdf_url: pdfUrl,
+    pdf_fingerprint: pdfFingerprint,
+    item,
+    item_number: item,
+    disposition_authority: dispositionAuthority,
+    page,
+    page_or_section: page,
+    is_included: isIncluded,
+    is_excluded: isExcluded,
+    disposition_class: dispositionClass,
+    cutoff_trigger: cutoffTrigger,
+    retention_months: retentionMonths,
+    consequential_fingerprint: consequentialFingerprint,
+    reason_code: reasonCode,
+    earliest_review_date: earliestReviewDate,
+    assessed_at: assessedAt,
+    is_accepted: isAccepted,
+    accepted_by: acceptedBy,
+    accepted_timestamp: acceptedTimestamp,
+    accepted_at: acceptedTimestamp,
+  };
+}
+
+export function normalizeReviewRecord(raw: any): ReviewRecord {
+  if (raw === null || raw === undefined) {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Review record is null or undefined');
+  }
+  let data = raw;
+  if (typeof raw === 'string') {
+    try {
+      data = JSON.parse(raw);
+    } catch (e: any) {
+      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed review JSON (${e?.message || 'parse error'})`);
+    }
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Review record is not an object');
+  }
+
+  const profileId = Number(data.profile_id ?? 0);
+  const epoch = Number(data.epoch ?? 0);
+  const requestedAt = String(data.requested_at ?? data.requested_timestamp ?? '');
+  const reviewRequested = Boolean(data.review_requested ?? (requestedAt ? true : false));
+  const requestedBy = String(data.requested_by || '');
+  const decided = Boolean(data.decided ?? data.is_decided ?? false);
+  const decidedAt = String(data.decided_at ?? data.decided_timestamp ?? '');
+  const officer = String(data.officer || '');
+  const decidedBy = String(data.decided_by || '');
+  const action = (data.action || 'NONE') as ReviewAction;
+  const reasonCode = String(data.reason_code || '');
+  const auditHoldActive = Boolean(data.audit_hold_active);
+
+  return {
+    profile_id: profileId,
+    epoch,
+    review_requested: reviewRequested,
+    requested_by: requestedBy,
+    requested_timestamp: requestedAt,
+    requested_at: requestedAt,
+    is_decided: decided,
+    decided,
+    action,
+    reason_code: reasonCode,
+    officer,
+    decided_by: decidedBy,
+    decided_timestamp: decidedAt,
+    decided_at: decidedAt,
+    audit_hold_active: auditHoldActive,
+  };
+}
+
+export function createEmptyMappingRecord(profileId: number): MappingRecord {
+  return {
+    profile_id: profileId,
+    attempt: 0,
+    outcome: 'UNRESOLVED',
+    schedule_number: '',
+    schedule_title: '',
+    schedule_version: '',
+    source_url: '',
+    pdf_url: '',
+    pdf_fingerprint: '',
+    item: '',
+    item_number: '',
+    disposition_authority: '',
+    page: '',
+    page_or_section: '',
+    is_included: false,
+    is_excluded: false,
+    disposition_class: 'NOT_APPLICABLE',
+    cutoff_trigger: 'NONE',
+    retention_months: 0,
+    consequential_fingerprint: '',
+    reason_code: '',
+    earliest_review_date: '',
+    assessed_at: '',
+    is_accepted: false,
+    accepted_by: '',
+    accepted_timestamp: '',
+    accepted_at: '',
+  };
+}
+
+export function createEmptyReviewRecord(profileId: number): ReviewRecord {
+  return {
+    profile_id: profileId,
+    epoch: 0,
+    review_requested: false,
+    requested_by: '',
+    requested_timestamp: '',
+    requested_at: '',
+    is_decided: false,
+    decided: false,
+    action: 'NONE',
+    reason_code: '',
+    officer: '',
+    decided_by: '',
+    decided_timestamp: '',
+    decided_at: '',
+    audit_hold_active: false,
+  };
+}
 
 function formatSafeError(err: any): string {
   if (!err) return 'Unknown error';
@@ -99,17 +355,17 @@ export class ContractService {
 
   public async getProfile(profileId: number, skipCache = false, signal?: AbortSignal): Promise<ProfileRecord> {
     const raw = await sharedRpc.readContract('get_profile', [profileId], 'profile_detail', skipCache, this.getConfiguredContractAddress(), signal);
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return normalizeProfileRecord(raw);
   }
 
   public async getMapping(profileId: number, skipCache = false, signal?: AbortSignal): Promise<MappingRecord> {
     const raw = await sharedRpc.readContract('get_mapping', [profileId], 'mapping_detail', skipCache, this.getConfiguredContractAddress(), signal);
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return normalizeMappingRecord(raw);
   }
 
   public async getReview(profileId: number, skipCache = false, signal?: AbortSignal): Promise<ReviewRecord> {
     const raw = await sharedRpc.readContract('get_review', [profileId], 'review_detail', skipCache, this.getConfiguredContractAddress(), signal);
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return normalizeReviewRecord(raw);
   }
 
   public async getEffectiveStatus(profileId: number, currentDate: string, skipCache = false, signal?: AbortSignal): Promise<ProfileState> {

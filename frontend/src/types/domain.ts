@@ -64,28 +64,44 @@ export interface ProfileRecord {
   cutoff_date: string;
   grs_family: GrsFamily;
   custodian: string;
+  owner?: string;
   officer: string;
   state: ProfileState;
+  is_frozen?: boolean;
   mapping_attempts: number;
+  mapping_outcome?: string;
+  is_mapping_accepted?: boolean;
   last_attempt_timestamp: string;
   successor_id: number;
+  superseded_by?: number;
+  supersedes?: number;
   audit_hold_active: boolean;
+  audit_hold?: boolean;
   audit_hold_reason: string;
   audit_hold_timestamp: string;
   fingerprint: string;
+  review_requested?: boolean;
+  review_requested_at?: string;
+  review_decided?: boolean;
+  review_action?: ReviewAction;
+  review_reason?: string;
 }
 
 export interface MappingRecord {
   profile_id: number;
+  attempt?: number;
   outcome: MappingOutcome;
   schedule_number: string;
   schedule_title: string;
   schedule_version: string;
+  source_url?: string;
   pdf_url: string;
   pdf_fingerprint: string;
   item: string;
+  item_number?: string;
   disposition_authority: string;
   page: string;
+  page_or_section?: string;
   is_included: boolean;
   is_excluded: boolean;
   disposition_class: DispositionClass;
@@ -94,21 +110,29 @@ export interface MappingRecord {
   consequential_fingerprint: string;
   reason_code: string;
   earliest_review_date: string;
+  assessed_at?: string;
   is_accepted: boolean;
   accepted_by: string;
   accepted_timestamp: string;
+  accepted_at?: string;
 }
 
 export interface ReviewRecord {
   profile_id: number;
+  epoch?: number;
   review_requested: boolean;
   requested_by: string;
   requested_timestamp: string;
+  requested_at?: string;
   is_decided: boolean;
+  decided?: boolean;
   action: ReviewAction;
   reason_code: string;
+  officer?: string;
   decided_by: string;
   decided_timestamp: string;
+  decided_at?: string;
+  audit_hold_active?: boolean;
 }
 
 export interface EventRecord {

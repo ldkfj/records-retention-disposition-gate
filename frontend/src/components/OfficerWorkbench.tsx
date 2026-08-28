@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { contractService } from '../services/contractService.ts';
+import { contractService, createEmptyMappingRecord, createEmptyReviewRecord } from '../services/contractService.ts';
 import { walletService } from '../services/walletService.ts';
 import {
   ProfileRecord,
@@ -9,6 +9,7 @@ import {
   TxStep,
   ProfileState,
 } from '../types/domain.ts';
+import { formatShortAddress } from '../utils/formatters.ts';
 
 const MAX_SELECTABLE_PROFILES = 16;
 
@@ -81,11 +82,22 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
     const fetchDetails = async () => {
       if (selectedId && typeof selectedId === 'number') {
         try {
-          const [p, m, r] = await Promise.all([
-            contractService.getProfile(selectedId, true),
-            contractService.getMapping(selectedId, true),
-            contractService.getReview(selectedId, true),
-          ]);
+          const p = await contractService.getProfile(selectedId, true);
+
+          let m: MappingRecord;
+          if (p.mapping_attempts > 0) {
+            m = await contractService.getMapping(selectedId, true);
+          } else {
+            m = createEmptyMappingRecord(selectedId);
+          }
+
+          let r: ReviewRecord;
+          if (p.review_requested || p.review_decided) {
+            r = await contractService.getReview(selectedId, true);
+          } else {
+            r = createEmptyReviewRecord(selectedId);
+          }
+
           const todayIso = new Date().toISOString().slice(0, 10);
           const eff = await contractService.getEffectiveStatus(selectedId, todayIso, true);
           setProfile(p);
@@ -197,7 +209,7 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
             <option value="">-- Choose Profile to Review --</option>
             {profiles.map((p) => (
               <option key={p.profile_id} value={p.profile_id}>
-                #{p.profile_id} - {p.client_nonce} [{p.state}] (Officer: {p.officer.slice(0, 6)}...)
+                #{p.profile_id} - {p.client_nonce} [{p.state}] (Officer: {formatShortAddress(p.officer)})
               </option>
             ))}
           </select>
@@ -246,24 +258,34 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
             <div className="dossier-grid">
               <span className="dossier-label">Outcome:</span>
               <span className="dossier-value">
-                <strong>{mapping.outcome}</strong>
+                {profile.mapping_attempts > 0 ? (
+                  <strong>{mapping.outcome}</strong>
+                ) : (
+                  'Not mapped yet'
+                )}
               </span>
             </div>
             <div className="dossier-grid">
               <span className="dossier-label">Schedule & Item:</span>
               <span className="dossier-value">
-                {mapping.schedule_number ? `${mapping.schedule_number} Item ${mapping.item} (${mapping.disposition_authority})` : 'Not mapped'}
+                {profile.mapping_attempts > 0 && mapping.schedule_number
+                  ? `${mapping.schedule_number} Item ${mapping.item || '—'} (${mapping.disposition_authority || '—'})`
+                  : 'Not mapped'}
               </span>
             </div>
             <div className="dossier-grid">
               <span className="dossier-label">Disposition Class:</span>
               <span className="dossier-value">
-                {mapping.disposition_class} ({mapping.retention_months} Months retention)
+                {profile.mapping_attempts > 0 && mapping.disposition_class !== 'NOT_APPLICABLE'
+                  ? `${mapping.disposition_class} (${mapping.retention_months} Months retention)`
+                  : 'N/A'}
               </span>
             </div>
             <div className="dossier-grid">
               <span className="dossier-label">Earliest Review Date:</span>
-              <span className="dossier-value mono">{mapping.earliest_review_date || 'N/A'}</span>
+              <span className="dossier-value mono">
+                {profile.mapping_attempts > 0 && mapping.earliest_review_date ? mapping.earliest_review_date : 'N/A'}
+              </span>
             </div>
             <div className="dossier-grid">
               <span className="dossier-label">Effective Status:</span>
@@ -274,14 +296,18 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
             <div className="dossier-grid">
               <span className="dossier-label">Acceptance Status:</span>
               <span className="dossier-value">
-                {mapping.is_accepted ? (
-                  <span style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
-                    ACCEPTED by {mapping.accepted_by.slice(0, 6)}...
-                  </span>
+                {profile.mapping_attempts > 0 ? (
+                  mapping.is_accepted ? (
+                    <span style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
+                      ACCEPTED {mapping.accepted_timestamp ? `on ${mapping.accepted_timestamp}` : '(Timestamp not exposed by contract)'}
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--amber-primary)', fontWeight: 600 }}>
+                      PENDING ACCEPTANCE
+                    </span>
+                  )
                 ) : (
-                  <span style={{ color: 'var(--amber-primary)', fontWeight: 600 }}>
-                    PENDING ACCEPTANCE
-                  </span>
+                  'Not mapped yet'
                 )}
               </span>
             </div>
@@ -298,7 +324,7 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
               </button>
               {!isAssignedOfficer && (
                 <span className="form-hint" style={{ color: 'var(--amber-primary)' }}>
-                  Connected wallet must match the assigned Records Officer address ({profile.officer.slice(0, 6)}...).
+                  Connected wallet must match the assigned Records Officer address ({formatShortAddress(profile.officer)}).
                 </span>
               )}
             </div>
@@ -313,21 +339,29 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
             <div className="dossier-grid">
               <span className="dossier-label">Review Request:</span>
               <span className="dossier-value">
-                {review.review_requested ? `REQUESTED on ${review.requested_timestamp}` : 'Not requested yet'}
+                {profile.review_requested || review.review_requested
+                  ? review.requested_timestamp
+                    ? `REQUESTED on ${review.requested_timestamp}`
+                    : 'REQUESTED (Timestamp not exposed by contract)'
+                  : 'Not requested yet'}
               </span>
             </div>
             <div className="dossier-grid">
               <span className="dossier-label">Decision Status:</span>
               <span className="dossier-value">
-                {review.is_decided ? (
+                {profile.review_decided || review.is_decided ? (
                   <span style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
-                    DECIDED: {review.action} (Reason: {review.reason_code})
+                    DECIDED: {review.action} (Reason: {review.reason_code || '—'})
                     <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Decided by {review.decided_by.slice(0, 6)}... on {review.decided_timestamp}
+                      {review.decided_timestamp
+                        ? `Decided on ${review.decided_timestamp}`
+                        : 'Decided (Timestamp not exposed by contract)'}
                     </span>
                   </span>
-                ) : (
+                ) : profile.review_requested || review.review_requested ? (
                   'Pending Officer Review'
+                ) : (
+                  'Not requested yet'
                 )}
               </span>
             </div>

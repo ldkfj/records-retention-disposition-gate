@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { contractService } from '../services/contractService.ts';
+import { contractService, createEmptyMappingRecord, createEmptyReviewRecord } from '../services/contractService.ts';
 import {
   ProfileRecord,
   MappingRecord,
@@ -8,6 +8,7 @@ import {
   ProfileState,
 } from '../types/domain.ts';
 import { OFFICIAL_NARA_SOURCES } from '../config/chain.ts';
+import { formatShortAddress } from '../utils/formatters.ts';
 
 const PAGE_SIZE = 8;
 const MAX_DOSSIER_EVENTS = 16;
@@ -89,13 +90,26 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
       setError(null);
       setSelectedProfileId(id);
 
-      const [profile, mapping, review, evCount] = await Promise.all([
-        contractService.getProfile(id, true),
-        contractService.getMapping(id, true),
-        contractService.getReview(id, true),
-        contractService.getEventCount(true),
-      ]);
+      // 1. Authoritatively fetch profile record first
+      const profile = await contractService.getProfile(id, true);
 
+      // 2. Only fetch mapping if attempts > 0, otherwise create explicit empty mapping
+      let mapping: MappingRecord;
+      if (profile.mapping_attempts > 0) {
+        mapping = await contractService.getMapping(id, true);
+      } else {
+        mapping = createEmptyMappingRecord(id);
+      }
+
+      // 3. Only fetch review if requested or decided, otherwise create explicit empty review
+      let review: ReviewRecord;
+      if (profile.review_requested || profile.review_decided) {
+        review = await contractService.getReview(id, true);
+      } else {
+        review = createEmptyReviewRecord(id);
+      }
+
+      const evCount = await contractService.getEventCount(true);
       const todayIso = new Date().toISOString().slice(0, 10);
       const eff = await contractService.getEffectiveStatus(id, todayIso, true);
 
@@ -374,10 +388,10 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
                       </td>
                       <td>{p.audit_hold_active ? <span className="status-badge status-HOLD">HOLD</span> : 'No'}</td>
                       <td className="mono" title={p.custodian}>
-                        {p.custodian.slice(0, 6)}...{p.custodian.slice(-4)}
+                        {formatShortAddress(p.custodian)}
                       </td>
                       <td className="mono" title={p.officer}>
-                        {p.officer.slice(0, 6)}...{p.officer.slice(-4)}
+                        {formatShortAddress(p.officer)}
                       </td>
                       <td>
                         <button
@@ -445,12 +459,12 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Creation Date:</span>
-                <span className="dossier-value mono">{selectedProfile.creation_date}</span>
+                <span className="dossier-value mono">{selectedProfile.creation_date || '—'}</span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Cutoff Date:</span>
                 <span className="dossier-value mono">
-                  {selectedProfile.cutoff_date}
+                  {selectedProfile.cutoff_date || '—'}
                   <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>
                     Trigger semantics: {selectedProfile.template === 'PROCUREMENT_WORKING_FILES' ? 'Final Payment or Contract Cancellation' : 'Business-Use Cessation'}
                   </span>
@@ -458,11 +472,11 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Custodian (Owner):</span>
-                <span className="dossier-value mono">{selectedProfile.custodian}</span>
+                <span className="dossier-value mono">{selectedProfile.custodian || '—'}</span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Records Officer:</span>
-                <span className="dossier-value mono">{selectedProfile.officer}</span>
+                <span className="dossier-value mono">{selectedProfile.officer || '—'}</span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Mapping Attempts:</span>
@@ -525,29 +539,39 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
               <div className="dossier-grid">
                 <span className="dossier-label">Mapping Outcome:</span>
                 <span className="dossier-value">
-                  <strong>{selectedMapping.outcome}</strong>
-                  {selectedMapping.reason_code && (
-                    <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Reason: {selectedMapping.reason_code}
-                    </span>
+                  {selectedProfile.mapping_attempts > 0 ? (
+                    <>
+                      <strong>{selectedMapping.outcome}</strong>
+                      {selectedMapping.reason_code && (
+                        <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Reason: {selectedMapping.reason_code}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    'Not mapped yet'
                   )}
                 </span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Schedule Authority:</span>
                 <span className="dossier-value">
-                  {selectedMapping.schedule_number ? (
+                  {selectedProfile.mapping_attempts > 0 && selectedMapping.schedule_number ? (
                     <>
                       {selectedMapping.schedule_number} - {selectedMapping.schedule_title} ({selectedMapping.schedule_version})
-                      <br />
-                      <a
-                        href={selectedMapping.pdf_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: 'var(--navy-primary)', fontSize: '12px' }}
-                      >
-                        View Official NARA PDF Source &rarr;
-                      </a>
+                      {selectedMapping.pdf_url && (
+                        <>
+                          <br />
+                          <a
+                            href={selectedMapping.pdf_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: 'var(--navy-primary)', fontSize: '12px' }}
+                          >
+                            View Official NARA Source CSV &rarr;
+                          </a>
+                        </>
+                      )}
                     </>
                   ) : (
                     'Not mapped yet'
@@ -557,9 +581,9 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
               <div className="dossier-grid">
                 <span className="dossier-label">Matched Item & Authority:</span>
                 <span className="dossier-value">
-                  {selectedMapping.item ? (
+                  {selectedProfile.mapping_attempts > 0 && selectedMapping.item ? (
                     <>
-                      Item {selectedMapping.item} (Authority: <span className="mono">{selectedMapping.disposition_authority}</span>, Page {selectedMapping.page})
+                      Item {selectedMapping.item} (Authority: <span className="mono">{selectedMapping.disposition_authority || '—'}</span>{selectedMapping.page ? `, Page ${selectedMapping.page}` : ''})
                     </>
                   ) : (
                     'N/A'
@@ -569,26 +593,34 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
               <div className="dossier-grid">
                 <span className="dossier-label">Disposition Class:</span>
                 <span className="dossier-value">
-                  {selectedMapping.disposition_class} (Retention: {selectedMapping.retention_months} Months)
+                  {selectedProfile.mapping_attempts > 0 && selectedMapping.disposition_class !== 'NOT_APPLICABLE' ? (
+                    `${selectedMapping.disposition_class} (Retention: ${selectedMapping.retention_months} Months)`
+                  ) : (
+                    'N/A'
+                  )}
                 </span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Earliest Review Date:</span>
                 <span className="dossier-value mono" style={{ fontWeight: 600 }}>
-                  {selectedMapping.earliest_review_date || 'N/A'}
+                  {selectedProfile.mapping_attempts > 0 && selectedMapping.earliest_review_date ? selectedMapping.earliest_review_date : 'N/A'}
                 </span>
               </div>
               <div className="dossier-grid">
                 <span className="dossier-label">Officer Acceptance:</span>
                 <span className="dossier-value">
-                  {selectedMapping.is_accepted ? (
-                    <span style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
-                      ACCEPTED by {selectedMapping.accepted_by.slice(0, 6)}...{selectedMapping.accepted_by.slice(-4)} on {selectedMapping.accepted_timestamp}
-                    </span>
+                  {selectedProfile.mapping_attempts > 0 ? (
+                    selectedMapping.is_accepted ? (
+                      <span style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
+                        ACCEPTED {selectedMapping.accepted_timestamp ? `on ${selectedMapping.accepted_timestamp}` : '(Timestamp not exposed by contract)'}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--amber-primary)' }}>
+                        Pending Records Officer Acceptance
+                      </span>
+                    )
                   ) : (
-                    <span style={{ color: 'var(--amber-primary)' }}>
-                      Pending Records Officer Acceptance
-                    </span>
+                    'Not mapped yet'
                   )}
                 </span>
               </div>
@@ -601,8 +633,10 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
                 <div className="dossier-grid">
                   <span className="dossier-label">Review Request:</span>
                   <span className="dossier-value">
-                    {selectedReview.review_requested ? (
-                      `Requested by ${selectedReview.requested_by.slice(0, 6)}... on ${selectedReview.requested_timestamp}`
+                    {selectedProfile.review_requested || selectedReview.review_requested ? (
+                      selectedReview.requested_timestamp
+                        ? `Requested on ${selectedReview.requested_timestamp}`
+                        : 'Requested (Timestamp not exposed by contract)'
                     ) : (
                       'No review requested yet'
                     )}
@@ -611,15 +645,19 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
                 <div className="dossier-grid">
                   <span className="dossier-label">Officer Decision:</span>
                   <span className="dossier-value">
-                    {selectedReview.is_decided ? (
+                    {selectedProfile.review_decided || selectedReview.is_decided ? (
                       <span style={{ fontWeight: 600, color: selectedReview.action.includes('AUTHORIZE') ? 'var(--green-primary)' : 'var(--text-main)' }}>
-                        {selectedReview.action} (Reason: {selectedReview.reason_code})
+                        {selectedReview.action} {selectedReview.reason_code ? `(Reason: ${selectedReview.reason_code})` : ''}
                         <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>
-                          Decided by {selectedReview.decided_by.slice(0, 6)}... on {selectedReview.decided_timestamp}
+                          {selectedReview.decided_timestamp
+                            ? `Decided on ${selectedReview.decided_timestamp}`
+                            : 'Decided (Timestamp not exposed by contract)'}
                         </span>
                       </span>
-                    ) : (
+                    ) : selectedProfile.review_requested || selectedReview.review_requested ? (
                       'Pending Review Decision'
+                    ) : (
+                      'No review requested yet'
                     )}
                   </span>
                 </div>
@@ -675,7 +713,7 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
                           <strong>{ev.event_type}</strong>
                         </td>
                         <td className="mono" title={ev.actor}>
-                          {ev.actor.slice(0, 6)}...{ev.actor.slice(-4)}
+                          {formatShortAddress(ev.actor)}
                         </td>
                         <td className="mono" style={{ fontSize: '12px' }}>
                           {ev.details}

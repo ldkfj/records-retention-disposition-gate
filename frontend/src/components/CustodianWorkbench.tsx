@@ -9,6 +9,7 @@ import {
   TxStep,
   ProfileState,
 } from '../types/domain.ts';
+import { formatShortAddress } from '../utils/formatters.ts';
 
 const MAX_SELECTABLE_PROFILES = 16;
 
@@ -570,7 +571,7 @@ export const CustodianWorkbench: React.FC<CustodianWorkbenchProps> = ({
               <option value="">-- Choose Profile --</option>
               {profiles.map((p) => (
                 <option key={p.profile_id} value={p.profile_id}>
-                  #{p.profile_id} - {p.client_nonce} [{p.state}] (Custodian: {p.custodian.slice(0, 6)}...)
+                  #{p.profile_id} - {p.client_nonce} [{p.state}] (Custodian: {formatShortAddress(p.custodian)})
                 </option>
               ))}
             </select>

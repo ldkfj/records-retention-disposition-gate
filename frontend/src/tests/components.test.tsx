@@ -232,7 +232,7 @@ describe('UI Components & Screen Journeys', () => {
 
     expect(container?.textContent).toContain('Record Series Disposition Dossier: Profile #1');
     expect(container?.textContent).toContain('TEMPORARY_ITEM_MATCH');
-    expect(container?.textContent).toContain('View Official NARA PDF Source');
+    expect(container?.textContent).toContain('View Official NARA Source CSV');
   });
 
   it('renders CustodianWorkbench with closed attribute options and creates profile', async () => {
@@ -525,5 +525,282 @@ describe('UI Components & Screen Journeys', () => {
 
     expect(container?.textContent).toContain('PROFILE_CREATED');
     expect(container?.textContent).toContain('MAPPING_ACCEPTED');
+  });
+
+  describe('Live Contract Schema Multi-Profile Robustness (Profile 1, 2, and 3)', () => {
+    const rawProfile1 = {
+      profile_id: 1,
+      client_nonce: 'LIVE-P1-001',
+      template: 'PROCUREMENT_WORKING_FILES',
+      attributes_json: '{"record_copy_status":"OFFICIAL_RECORD"}',
+      creation_date: '2024-01-01',
+      cutoff_date: '2024-06-01',
+      grs_family: 'GRS_1_1',
+      owner: '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78',
+      officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+      state: 'MAPPED',
+      is_frozen: true,
+      mapping_attempts: 1,
+      mapping_outcome: 'TEMPORARY_ITEM_MATCH',
+      is_mapping_accepted: true,
+      last_attempt_timestamp: '2024-06-01T12:00:00Z',
+      superseded_by: 0,
+      supersedes: 0,
+      audit_hold: false,
+      audit_hold_reason: '',
+      audit_hold_timestamp: '',
+      fingerprint: 'fp1',
+      review_requested: false,
+      review_decided: false,
+    };
+
+    const rawMapping1 = {
+      profile_id: 1,
+      attempt: 1,
+      outcome: 'TEMPORARY_ITEM_MATCH',
+      schedule_number: 'GRS 1.1',
+      schedule_title: 'Financial Management and Reporting Records',
+      schedule_version: 'Transmittal 31 / April 2020',
+      source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+      pdf_fingerprint: 'pdf_fp1',
+      item_number: '010',
+      disposition_authority: 'DAA-GRS-2013-0003-0001',
+      page_or_section: '3',
+      is_included: true,
+      is_excluded: false,
+      disposition_class: 'TEMPORARY',
+      cutoff_trigger: 'FINAL_PAYMENT_OR_CANCELLATION',
+      retention_months: 72,
+      consequential_fingerprint: 'cq_fp1',
+      reason_code: 'UNIQUE_MATCH',
+      earliest_review_date: '2030-06-01',
+      is_accepted: true,
+      accepted_at: '2024-06-02T10:00:00Z',
+    };
+
+    const rawProfile2 = {
+      profile_id: 2,
+      client_nonce: 'live2-office-001',
+      template: 'ADMINISTRATIVE_POLICY_FILES',
+      attributes_json: '{"policy_scope":"OFFICE_UNIT_LEVEL"}',
+      creation_date: '2020-01-01',
+      cutoff_date: '2020-06-01',
+      grs_family: 'GRS_5_1',
+      owner: '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78',
+      officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+      state: 'SUPERSEDED',
+      is_frozen: true,
+      mapping_attempts: 2,
+      mapping_outcome: 'TEMPORARY_ITEM_MATCH',
+      is_mapping_accepted: true,
+      last_attempt_timestamp: '2020-06-01T12:00:00Z',
+      superseded_by: 3,
+      supersedes: 0,
+      audit_hold: false,
+      audit_hold_reason: '',
+      audit_hold_timestamp: '',
+      fingerprint: 'fp2',
+      review_requested: true,
+      review_requested_at: '2026-06-01T08:00:00Z',
+      review_decided: true,
+      review_action: 'AUTHORIZE_DISPOSITION',
+      review_reason: 'RETENTION_COMPLETE_AND_NO_ACTIVE_HOLD',
+    };
+
+    const rawMapping2 = {
+      profile_id: 2,
+      attempt: 2,
+      outcome: 'TEMPORARY_ITEM_MATCH',
+      schedule_number: 'GRS 5.1',
+      schedule_title: 'Common Office Records',
+      schedule_version: 'Transmittal 28 / July 2017',
+      source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+      pdf_fingerprint: 'pdf_fp2',
+      item_number: '010',
+      disposition_authority: 'DAA-GRS-2016-0016-0001',
+      page_or_section: '3',
+      is_included: true,
+      is_excluded: false,
+      disposition_class: 'TEMPORARY',
+      cutoff_trigger: 'BUSINESS_USE_CEASES',
+      retention_months: 0,
+      consequential_fingerprint: 'cq_fp2',
+      reason_code: 'EXACT_MATCH',
+      earliest_review_date: '2020-06-01',
+      is_accepted: true,
+      accepted_at: '2020-06-02T10:00:00Z',
+    };
+
+    const rawReview2 = {
+      profile_id: 2,
+      epoch: 1,
+      review_requested: true,
+      requested_at: '2026-06-01T08:00:00Z',
+      decided: true,
+      decided_at: '2026-06-02T10:00:00Z',
+      officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+      action: 'AUTHORIZE_DISPOSITION',
+      reason_code: 'RETENTION_COMPLETE_AND_NO_ACTIVE_HOLD',
+      audit_hold_active: false,
+    };
+
+    const rawProfile3 = {
+      profile_id: 3,
+      client_nonce: 'live3-successor-001',
+      template: 'ADMINISTRATIVE_POLICY_FILES',
+      attributes_json: '{"policy_scope":"OFFICE_UNIT_LEVEL"}',
+      creation_date: '2025-01-01',
+      cutoff_date: '2025-06-01',
+      grs_family: 'GRS_5_1',
+      owner: '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78',
+      officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+      state: 'DRAFT',
+      is_frozen: false,
+      mapping_attempts: 0,
+      mapping_outcome: '',
+      is_mapping_accepted: false,
+      last_attempt_timestamp: '',
+      superseded_by: 0,
+      supersedes: 2,
+      audit_hold: false,
+      audit_hold_reason: '',
+      audit_hold_timestamp: '',
+      fingerprint: 'fp3',
+      review_requested: false,
+      review_decided: false,
+    };
+
+    it('renders PublicLookup dossier cleanly for Profile 1 (has mapping, no review)', async () => {
+      vi.spyOn(contractService, 'getConfiguredContractAddress').mockReturnValue('0x1234567890123456789012345678901234567890');
+      const rawClient = sharedRpc.getRawClient();
+      const readSpy = vi.spyOn(rawClient, 'readContract').mockImplementation(async (args: any) => {
+        const fn = args?.functionName;
+        if (fn === 'get_profile_count') return '1';
+        if (fn === 'get_profile') return rawProfile1;
+        if (fn === 'get_mapping') return rawMapping1;
+        if (fn === 'get_effective_status') return 'MAPPED';
+        if (fn === 'get_event_count') return '0';
+        return null;
+      });
+
+      await renderComponent(<PublicLookup />);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('LIVE-P1-001');
+      expect(container?.textContent).toContain('0x34b9...9D78');
+
+      const viewDossierBtn = Array.from(container?.querySelectorAll('button') || []).find((b) =>
+        b.textContent?.includes('View Dossier')
+      );
+      expect(viewDossierBtn).toBeDefined();
+
+      await act(async () => {
+        viewDossierBtn?.click();
+      });
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('Record Series Disposition Dossier: Profile #1');
+      expect(container?.textContent).toContain('TEMPORARY_ITEM_MATCH');
+      expect(container?.textContent).toContain('010');
+      expect(container?.textContent).toContain('View Official NARA Source CSV');
+      expect(container?.textContent).toContain('No review requested yet');
+
+      // get_review should NOT have been called on raw client because profile 1 has no review requested or decided
+      const reviewCalls = readSpy.mock.calls.filter((c: any) => c[0]?.functionName === 'get_review');
+      expect(reviewCalls.length).toBe(0);
+    });
+
+    it('renders PublicLookup dossier cleanly for Profile 2 (has mapping and decided review)', async () => {
+      vi.spyOn(contractService, 'getConfiguredContractAddress').mockReturnValue('0x1234567890123456789012345678901234567890');
+      const rawClient = sharedRpc.getRawClient();
+      vi.spyOn(rawClient, 'readContract').mockImplementation(async (args: any) => {
+        const fn = args?.functionName;
+        if (fn === 'get_profile_count') return '1';
+        if (fn === 'get_profile') return rawProfile2;
+        if (fn === 'get_mapping') return rawMapping2;
+        if (fn === 'get_review') return rawReview2;
+        if (fn === 'get_effective_status') return 'SUPERSEDED';
+        if (fn === 'get_event_count') return '0';
+        return null;
+      });
+
+      await renderComponent(<PublicLookup />);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('live2-office-001');
+
+      const viewDossierBtn = Array.from(container?.querySelectorAll('button') || []).find((b) =>
+        b.textContent?.includes('View Dossier')
+      );
+      expect(viewDossierBtn).toBeDefined();
+
+      await act(async () => {
+        viewDossierBtn?.click();
+      });
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('Record Series Disposition Dossier: Profile #2');
+      expect(container?.textContent).toContain('AUTHORIZE_DISPOSITION');
+      expect(container?.textContent).toContain('RETENTION_COMPLETE_AND_NO_ACTIVE_HOLD');
+      expect(container?.textContent).toContain('Superseded By:');
+      expect(container?.textContent).toContain('Profile #3');
+    });
+
+    it('renders PublicLookup dossier cleanly for Profile 3 (draft, neither mapping nor review)', async () => {
+      vi.spyOn(contractService, 'getConfiguredContractAddress').mockReturnValue('0x1234567890123456789012345678901234567890');
+      const rawClient = sharedRpc.getRawClient();
+      const readSpy = vi.spyOn(rawClient, 'readContract').mockImplementation(async (args: any) => {
+        const fn = args?.functionName;
+        if (fn === 'get_profile_count') return '1';
+        if (fn === 'get_profile') return rawProfile3;
+        if (fn === 'get_effective_status') return 'DRAFT';
+        if (fn === 'get_event_count') return '0';
+        return null;
+      });
+
+      await renderComponent(<PublicLookup />);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('live3-successor-001');
+      expect(container?.textContent).toContain('DRAFT');
+
+      const viewDossierBtn = Array.from(container?.querySelectorAll('button') || []).find((b) =>
+        b.textContent?.includes('View Dossier')
+      );
+      expect(viewDossierBtn).toBeDefined();
+
+      await act(async () => {
+        viewDossierBtn?.click();
+      });
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(container?.textContent).toContain('Record Series Disposition Dossier: Profile #3');
+      expect(container?.textContent).toContain('Not mapped yet');
+      expect(container?.textContent).toContain('No review requested yet');
+
+      // Neither get_mapping nor get_review should be called for Profile 3
+      const mappingCalls = readSpy.mock.calls.filter((c: any) => c[0]?.functionName === 'get_mapping');
+      const reviewCalls = readSpy.mock.calls.filter((c: any) => c[0]?.functionName === 'get_review');
+      expect(mappingCalls.length).toBe(0);
+      expect(reviewCalls.length).toBe(0);
+    });
   });
 });

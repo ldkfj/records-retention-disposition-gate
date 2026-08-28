@@ -1,10 +1,17 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { contractService } from '../services/contractService.ts';
+import {
+  contractService,
+  normalizeProfileRecord,
+  normalizeMappingRecord,
+  normalizeReviewRecord,
+  createEmptyMappingRecord,
+  createEmptyReviewRecord,
+} from '../services/contractService.ts';
 import { sharedRpc } from '../services/rpcClient.ts';
 import { walletService } from '../services/walletService.ts';
 import { journalService } from '../services/journalService.ts';
 
-describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejections & Reads)', () => {
+describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipeline Verification)', () => {
   const dummyContract = '0x1234567890123456789012345678901234567890';
   const dummyAccount = '0x9999999999999999999999999999999999999999';
 
@@ -52,7 +59,141 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
     expect((contractService as any).upgrade).toBeUndefined();
   });
 
-  it('reads profile, mapping, review, is_nonce_used, and source metadata correctly', async () => {
+  describe('Live Schema Normalization Helpers', () => {
+    it('normalizes live on-chain profile dictionary with field aliases', () => {
+      // Live on-chain profile shape returns `owner`, `superseded_by`, and `audit_hold`
+      const rawLiveProfile = {
+        profile_id: 1,
+        client_nonce: 'FY24-PROC-001',
+        template: 'PROCUREMENT_WORKING_FILES',
+        attributes_json: '{"record_copy_status":"OFFICIAL_RECORD"}',
+        creation_date: '2024-01-01',
+        cutoff_date: '2024-06-01',
+        grs_family: 'GRS_1_1',
+        owner: '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78',
+        officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+        state: 'MAPPED',
+        is_frozen: true,
+        mapping_attempts: 1,
+        mapping_outcome: 'TEMPORARY_ITEM_MATCH',
+        is_mapping_accepted: true,
+        last_attempt_timestamp: '2024-06-01T12:00:00Z',
+        superseded_by: 0,
+        supersedes: 0,
+        audit_hold: false,
+        audit_hold_reason: '',
+        audit_hold_timestamp: '',
+        fingerprint: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        review_requested: false,
+        review_decided: false,
+      };
+
+      const normalized = normalizeProfileRecord(rawLiveProfile);
+      expect(normalized.profile_id).toBe(1);
+      expect(normalized.custodian).toBe('0x34b92E6553eaCA11A00A9d86d75d8a7881779D78');
+      expect(normalized.owner).toBe('0x34b92E6553eaCA11A00A9d86d75d8a7881779D78');
+      expect(normalized.officer).toBe('0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1');
+      expect(normalized.successor_id).toBe(0);
+      expect(normalized.audit_hold_active).toBe(false);
+      expect(normalized.is_mapping_accepted).toBe(true);
+      expect(normalized.mapping_attempts).toBe(1);
+    });
+
+    it('normalizes live on-chain mapping dictionary with field aliases', () => {
+      // Live on-chain mapping returns `item_number`, `page_or_section`, `source_url`, `accepted_at`
+      const rawLiveMapping = {
+        profile_id: 1,
+        attempt: 1,
+        outcome: 'TEMPORARY_ITEM_MATCH',
+        schedule_number: 'GRS 1.1',
+        schedule_title: 'Financial Management and Reporting Records',
+        schedule_version: 'Transmittal 31 / April 2020',
+        source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+        pdf_fingerprint: '3b0ac8c2810a9a13a7c6a992ac4ad87f7a7da09f7a7ea391be0ff3cc6cff87aa',
+        item_number: '010',
+        disposition_authority: 'DAA-GRS-2013-0003-0001',
+        page_or_section: '3',
+        is_included: true,
+        is_excluded: false,
+        disposition_class: 'TEMPORARY',
+        cutoff_trigger: 'FINAL_PAYMENT_OR_CANCELLATION',
+        retention_months: 72,
+        consequential_fingerprint: 'a6c8e312f10b0d35...',
+        reason_code: 'EXACT_MATCH',
+        earliest_review_date: '2030-06-01',
+        assessed_at: '2024-06-01T12:00:00Z',
+        is_accepted: true,
+        accepted_at: '2024-06-02T09:30:00Z',
+      };
+
+      const normalized = normalizeMappingRecord(rawLiveMapping);
+      expect(normalized.profile_id).toBe(1);
+      expect(normalized.item).toBe('010');
+      expect(normalized.item_number).toBe('010');
+      expect(normalized.page).toBe('3');
+      expect(normalized.page_or_section).toBe('3');
+      expect(normalized.pdf_url).toBe('https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv');
+      expect(normalized.source_url).toBe('https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv');
+      expect(normalized.accepted_timestamp).toBe('2024-06-02T09:30:00Z');
+      expect(normalized.accepted_by).toBe('');
+      expect(normalized.is_accepted).toBe(true);
+    });
+
+    it('normalizes live on-chain review dictionary with field aliases', () => {
+      // Live on-chain review returns `requested_at`, `decided`, `decided_at`
+      const rawLiveReview = {
+        profile_id: 2,
+        epoch: 1,
+        review_requested: true,
+        requested_at: '2030-06-01T08:00:00Z',
+        decided: true,
+        decided_at: '2030-06-02T10:00:00Z',
+        officer: '0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1',
+        action: 'AUTHORIZE_DISPOSITION',
+        reason_code: 'OFFICER_APPROVED',
+        audit_hold_active: false,
+      };
+
+      const normalized = normalizeReviewRecord(rawLiveReview);
+      expect(normalized.profile_id).toBe(2);
+      expect(normalized.review_requested).toBe(true);
+      expect(normalized.requested_timestamp).toBe('2030-06-01T08:00:00Z');
+      expect(normalized.is_decided).toBe(true);
+      expect(normalized.decided).toBe(true);
+      expect(normalized.decided_timestamp).toBe('2030-06-02T10:00:00Z');
+      expect(normalized.action).toBe('AUTHORIZE_DISPOSITION');
+      expect(normalized.requested_by).toBe('');
+      expect(normalized.decided_by).toBe('');
+    });
+
+    it('creates accurate explicit empty mapping and review records', () => {
+      const emptyMapping = createEmptyMappingRecord(3);
+      expect(emptyMapping.profile_id).toBe(3);
+      expect(emptyMapping.outcome).toBe('UNRESOLVED');
+      expect(emptyMapping.is_accepted).toBe(false);
+      expect(emptyMapping.schedule_number).toBe('');
+
+      const emptyReview = createEmptyReviewRecord(3);
+      expect(emptyReview.profile_id).toBe(3);
+      expect(emptyReview.review_requested).toBe(false);
+      expect(emptyReview.is_decided).toBe(false);
+      expect(emptyReview.action).toBe('NONE');
+    });
+
+    it('throws a typed error when raw response is null, undefined, or non-object', () => {
+      expect(() => normalizeProfileRecord(null)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord(undefined)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord('not-valid-json')).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+
+      expect(() => normalizeMappingRecord(null)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeMappingRecord(undefined)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+
+      expect(() => normalizeReviewRecord(null)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeReviewRecord(undefined)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+    });
+  });
+
+  it('reads profile, mapping, review, is_nonce_used, and source metadata through normalized public boundary', async () => {
     vi.spyOn(contractService, 'getConfiguredContractAddress').mockReturnValue(dummyContract);
     const rawClient = sharedRpc.getRawClient();
     vi.spyOn(rawClient, 'readContract').mockImplementation(async (args: any) => {
@@ -68,13 +209,13 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
           creation_date: '2024-01-01',
           cutoff_date: '2024-06-01',
           grs_family: 'GRS_1_1',
-          custodian: dummyAccount,
+          owner: dummyAccount,
           officer: '0x8888888888888888888888888888888888888888',
           state: 'FROZEN',
           mapping_attempts: 1,
           last_attempt_timestamp: '2024-06-01T12:00:00Z',
-          successor_id: 0,
-          audit_hold_active: false,
+          superseded_by: 0,
+          audit_hold: false,
           audit_hold_reason: '',
           audit_hold_timestamp: '',
           fingerprint: 'fp123',
@@ -87,11 +228,11 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
           schedule_version: 'Transmittal 31 / April 2020',
-          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+          source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
           pdf_fingerprint: 'pdf_fp',
-          item: '010',
+          item_number: '010',
           disposition_authority: 'DAA-GRS-2013-0003-0001',
-          page: '3',
+          page_or_section: '3',
           is_included: true,
           is_excluded: false,
           disposition_class: 'TEMPORARY',
@@ -101,21 +242,18 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
           reason_code: 'UNIQUE_MATCH',
           earliest_review_date: '2030-06-01',
           is_accepted: false,
-          accepted_by: '',
-          accepted_timestamp: '',
+          accepted_at: '',
         };
       }
       if (functionName === 'get_review') {
         return {
           profile_id: 1,
           review_requested: false,
-          requested_by: '',
-          requested_timestamp: '',
-          is_decided: false,
+          requested_at: '',
+          decided: false,
           action: 'NONE',
           reason_code: '',
-          decided_by: '',
-          decided_timestamp: '',
+          decided_at: '',
         };
       }
       if (functionName === 'get_source_metadata') {
@@ -141,11 +279,13 @@ describe('ContractService (Exact ABI Parity, Return ID Decoding, Error Rejection
 
     const profile = await contractService.getProfile(1, true);
     expect(profile.client_nonce).toBe('FY24-001');
+    expect(profile.custodian).toBe(dummyAccount);
     expect(profile.state).toBe('FROZEN');
 
     const mapping = await contractService.getMapping(1, true);
     expect(mapping.item).toBe('010');
     expect(mapping.retention_months).toBe(72);
+    expect(mapping.pdf_url).toBe('https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv');
 
     const review = await contractService.getReview(1, true);
     expect(review.is_decided).toBe(false);
