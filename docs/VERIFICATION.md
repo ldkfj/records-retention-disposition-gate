@@ -1,6 +1,6 @@
 # Verification
 
-Status: `LIVE VERIFIED — POST_DEPLOY_TEST REVIEW PENDING`
+Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; PUBLIC E2E PENDING`
 
 ## Exact source and deployment
 
@@ -15,6 +15,17 @@ Status: `LIVE VERIFIED — POST_DEPLOY_TEST REVIEW PENDING`
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 
 Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05ff...5609525`, exactly matching the reviewed local source.
+
+## Public release artifacts
+
+- GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
+- Exact GitHub commit: `a61ba14bb41bbcdec7756e8090fe2c8a61ab5152`
+- Exact GitHub tree: `80ea445c81c37259e8d4e4c4696deaaea3330abe`
+- Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
+- Production URL: https://records-retention-disposition-gate.vercel.app
+- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/EzrcddJuh3M5adCzQjTYkMwnz6pg
+- Deployment ID: `dpl_EzrcddJuh3M5adCzQjTYkMwnz6pg`; target `production`; status `READY`
+- Anonymous public smoke: production page rendered the chain/contract banner, workbench navigation, authoritative NARA CSV labels, and provenance-only PDF labels. Independent-wallet E2E is intentionally not claimed until the user completes it.
 
 ## Live Studio proof highlights
 

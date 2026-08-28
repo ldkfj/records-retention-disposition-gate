@@ -7,7 +7,8 @@ Records Retention Disposition Gate is a GenLayer application that maps frozen re
 - Studionet contract: [`0xE679...D61C`](https://explorer-studio.genlayer.com/address/0xE679b4345BF5AB03105A51Ef41743545139cD61C)
 - Deployment and recovery manifest: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 - Live proof: [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
-- Live web application: added after the governed Vercel release gate
+- GitHub revision: [`a61ba14`](https://github.com/ldkfj/records-retention-disposition-gate/commit/a61ba14bb41bbcdec7756e8090fe2c8a61ab5152)
+- Live web application: [`records-retention-disposition-gate.vercel.app`](https://records-retention-disposition-gate.vercel.app)
 
 ## Trust problem
 
@@ -93,4 +94,4 @@ The principal release uses Studionet chain ID `61999` and contract `0xE679b4345B
 - It does not replace agency-specific schedules, resolve legal holds, or provide legal advice.
 - Interpretation is limited to closed templates and exact NARA rows encoded by the contract.
 - Studionet may reset; recovery depends on recorded source/constructor values and upgrader access.
-- The Vercel URL and independent-wallet web E2E evidence remain pending governed release stages.
+- Independent-wallet web E2E evidence remains pending the final governed release stage.
