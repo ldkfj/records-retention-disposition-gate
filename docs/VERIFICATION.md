@@ -4,8 +4,8 @@ Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; PUBLIC E2E RERUN PASSED; F
 
 ## Live Vercel E2E repair and rerun — 2026-08-28
 
-- Release candidate commit: `546acb65b222357055afc6af0b0f541ed96de98f`.
-- Production deployment: `dpl_3k34m2RAZ3FaR1q3AmKPT5JfyiPr`; canonical URL `https://records-retention-disposition-gate.vercel.app` loaded bundle `/assets/index-BHLzXCPn.js`.
+- Exact tested release commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`.
+- Exact tested production deployment: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; canonical URL `https://records-retention-disposition-gate.vercel.app` loaded bundle `/assets/index-BHLzXCPn.js`.
 - Independent browser wallet: OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; the human user approved wallet connection and each signature while the primary AI operated the visible E2E steps under the Task-local instruction.
 - Profile creation tx `0xfbbb02e5bfd46584d57aca9568435cd40bff3cd2361dac1ee34c48b342351aa5`, profile freeze tx `0x6c7b6d7fc07e6d4a3fb76817c8e89b7d9300f70391c7abd46c71f4348d4b99b5`, and mapping assessment tx `0x77f9ab2ce51de2cbcd34df7f0c637d40702331626352387d92af80bc0e7aad09` all reached `FINALIZED`, `MAJORITY_AGREE`, leader execution `SUCCESS`, and authoritative readback.
 - Readback: profile `4`, nonce `vercel-e2e-20260828-2242`, owner `0x0087...e01f`, state `MAPPED`, mapping outcome `TEMPORARY_ITEM_MATCH`, GRS 1.1 item `010`, authority `DAA-GRS-2013-0003-0001`, retention `72` months, earliest review `2032-08-28`.
