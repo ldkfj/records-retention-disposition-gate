@@ -12,6 +12,7 @@ import { formatShortAddress } from '../utils/formatters.ts';
 
 const PAGE_SIZE = 8;
 const MAX_DOSSIER_EVENTS = 16;
+const EVENT_READ_CONCURRENCY = 4;
 
 interface PublicLookupProps {
   onSelectProfile?: (profileId: number) => void;
@@ -118,15 +119,21 @@ export const PublicLookup: React.FC<PublicLookupProps> = ({ onSelectProfile }) =
       const startEvId = Math.max(1, evCount - MAX_DOSSIER_EVENTS + 1);
       const evIds = Array.from({ length: evCount - startEvId + 1 }, (_, i) => startEvId + i);
 
-      const fetchedEvs = await Promise.all(
-        evIds.map(async (eId) => {
-          try {
-            return await contractService.getEvent(eId);
-          } catch {
-            return null;
-          }
-        })
-      );
+      const fetchedEvs: Array<EventRecord | null> = [];
+      for (let offset = 0; offset < evIds.length; offset += EVENT_READ_CONCURRENCY) {
+        const batch = evIds.slice(offset, offset + EVENT_READ_CONCURRENCY);
+        fetchedEvs.push(
+          ...(await Promise.all(
+            batch.map(async (eId) => {
+              try {
+                return await contractService.getEvent(eId);
+              } catch {
+                return null;
+              }
+            })
+          ))
+        );
+      }
 
       for (const e of fetchedEvs) {
         if (e && e.profile_id === id) {

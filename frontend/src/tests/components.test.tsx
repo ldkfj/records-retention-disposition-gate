@@ -206,7 +206,15 @@ describe('UI Components & Screen Journeys', () => {
       decided_timestamp: '',
     });
     vi.spyOn(contractService, 'getEffectiveStatus').mockResolvedValue('RETAINING');
-    vi.spyOn(contractService, 'getEventCount').mockResolvedValue(0);
+    vi.spyOn(contractService, 'getEventCount').mockResolvedValue(18);
+    vi.spyOn(contractService, 'getEvent').mockImplementation(async (id) => ({
+      event_id: id,
+      profile_id: id === 18 ? 1 : 2,
+      event_type: id === 18 ? 'MAPPING_ASSESSED' : 'OTHER_PROFILE_EVENT',
+      actor: '0x1111111111111111111111111111111111111111',
+      details: id === 18 ? 'outcome=TEMPORARY_ITEM_MATCH;attempt=1' : '',
+      timestamp: '2024-06-01T12:00:00Z',
+    }));
 
     await renderComponent(<PublicLookup />);
 
@@ -233,6 +241,8 @@ describe('UI Components & Screen Journeys', () => {
     expect(container?.textContent).toContain('Record Series Disposition Dossier: Profile #1');
     expect(container?.textContent).toContain('TEMPORARY_ITEM_MATCH');
     expect(container?.textContent).toContain('View Official NARA Source CSV');
+    expect(container?.textContent).toContain('Immutable Audit Event History (1 Events)');
+    expect(container?.textContent).toContain('MAPPING_ASSESSED');
   });
 
   it('renders CustodianWorkbench with closed attribute options and creates profile', async () => {
