@@ -31,13 +31,13 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 ## Public release artifacts
 
 - GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
-- Exact GitHub commit: `a61ba14bb41bbcdec7756e8090fe2c8a61ab5152`
-- Exact GitHub tree: `80ea445c81c37259e8d4e4c4696deaaea3330abe`
+- Exact GitHub commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`
+- Exact GitHub tree: `9295c29c041692b74bedf2108159a8f8ef545e8c`
 - Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
 - Production URL: https://records-retention-disposition-gate.vercel.app
-- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/EzrcddJuh3M5adCzQjTYkMwnz6pg
-- Deployment ID: `dpl_EzrcddJuh3M5adCzQjTYkMwnz6pg`; target `production`; status `READY`
-- Anonymous public smoke: production page rendered the chain/contract banner, workbench navigation, authoritative NARA CSV labels, and provenance-only PDF labels. Independent-wallet E2E is intentionally not claimed until the user completes it.
+- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/22qhwuy0a
+- Deployment ID: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; target `production`; status `READY`
+- Exact-release E2E: the production page passed the independent OKX-wallet lifecycle and readback checks documented above, with each wallet connection and transaction signature approved by the user.
 
 ## Live Studio proof highlights
 

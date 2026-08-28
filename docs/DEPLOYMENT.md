@@ -16,16 +16,16 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; VERCEL INDEPENDE
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 - Linked contracts: none
 - GitHub repository: `https://github.com/ldkfj/records-retention-disposition-gate`
-- GitHub release commit: `a61ba14bb41bbcdec7756e8090fe2c8a61ab5152`
-- GitHub release tree: `80ea445c81c37259e8d4e4c4696deaaea3330abe`
+- GitHub release commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`
+- GitHub release tree: `9295c29c041692b74bedf2108159a8f8ef545e8c`
 - Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
-- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/EzrcddJuh3M5adCzQjTYkMwnz6pg`
-- Deployment ID: `dpl_EzrcddJuh3M5adCzQjTYkMwnz6pg`; target `production`; status `READY`
+- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/22qhwuy0a`
+- Deployment ID: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; target `production`; status `READY`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.
 
-The production Vercel page was anonymously smoke-checked after deployment: the chain/contract banner, workbench navigation, authoritative NARA CSV labels, and provenance-only PDF labels rendered. This is not the required independent-wallet E2E; that final user-owned check remains pending.
+The exact production release passed independent-wallet E2E with user-approved OKX connection and signatures while the primary AI operated the visible flow. The chain/contract banner, workbench navigation, authoritative NARA CSV labels, provenance-only PDF labels, profile 4 lifecycle, and immutable events 16-18 were verified.
 
 The final procurement acceptance correction is transaction `0x0b52ec29ff869c50cd40fa61b0a8b98c7d696effae976b2c2bdd937faf0a681c`; finalized readback confirms profile 1 is mapping-accepted. The earlier malformed call is retained in `docs/VERIFICATION.md` as negative diagnostic evidence, not as a successful acceptance.
 
