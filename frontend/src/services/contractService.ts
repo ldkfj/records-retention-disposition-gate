@@ -20,51 +20,213 @@ import {
   PendingOperation,
 } from '../types/domain.ts';
 
-export function normalizeProfileRecord(raw: any): ProfileRecord {
-  if (raw === null || raw === undefined) {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Profile record is null or undefined');
-  }
+const PROFILE_STATES = new Set<ProfileState>([
+  'DRAFT',
+  'FROZEN',
+  'MAPPED',
+  'RECLASSIFY_REQUIRED',
+  'HOLD_UNRESOLVED',
+  'RETAINING',
+  'REVIEW_ELIGIBLE',
+  'REVIEW_REQUESTED',
+  'TRANSFER_AUTHORIZED',
+  'DISPOSITION_AUTHORIZED',
+  'HOLD',
+  'SUPERSEDED',
+]);
+const MAPPING_OUTCOMES = new Set<MappingOutcome>([
+  'TEMPORARY_ITEM_MATCH',
+  'PERMANENT_ITEM_MATCH',
+  'EXCLUDED_OR_WRONG_SCHEDULE',
+  'MULTIPLE_PLAUSIBLE_ITEMS',
+  'UNRESOLVED',
+]);
+const DISPOSITION_CLASSES = new Set(['TEMPORARY', 'PERMANENT', 'NOT_APPLICABLE', 'NONE']);
+const CUTOFF_TRIGGERS = new Set<CutoffTrigger>([
+  'FINAL_PAYMENT_OR_CANCELLATION',
+  'BUSINESS_USE_CEASES',
+  'NONE',
+]);
+const REVIEW_ACTIONS = new Set<ReviewAction>([
+  'NONE',
+  'AUTHORIZE_TRANSFER',
+  'AUTHORIZE_DISPOSITION',
+  'HOLD',
+  'RECLASSIFY',
+]);
+const TEMPLATES = new Set<TemplateType>(['PROCUREMENT_WORKING_FILES', 'ADMINISTRATIVE_POLICY_FILES']);
+const GRS_FAMILIES = new Set<GrsFamily>(['GRS_1_1', 'GRS_5_1']);
+
+function invalidContractRead(recordName: string, detail: string): never {
+  throw new Error(`INVALID_CONTRACT_READ_RESPONSE: ${recordName} ${detail}`);
+}
+
+function parseRecord(raw: unknown, recordName: string): Record<string, unknown> {
   let data = raw;
   if (typeof raw === 'string') {
     try {
-      data = JSON.parse(raw);
-    } catch (e: any) {
-      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed profile JSON (${e?.message || 'parse error'})`);
+      data = JSON.parse(raw) as unknown;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'parse error';
+      invalidContractRead(recordName, `malformed JSON (${message})`);
     }
   }
-  if (!data || typeof data !== 'object') {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Profile record is not an object');
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    invalidContractRead(recordName, 'must be a non-array object');
   }
+  return data as Record<string, unknown>;
+}
 
-  const profileId = Number(data.profile_id ?? data.id ?? 0);
-  const clientNonce = String(data.client_nonce ?? data.nonce ?? '');
-  const template = (data.template || 'PROCUREMENT_WORKING_FILES') as TemplateType;
-  const attributesJson =
-    typeof data.attributes_json === 'string'
-      ? data.attributes_json
-      : JSON.stringify(data.attributes_json || {});
-  const creationDate = String(data.creation_date || '');
-  const cutoffDate = String(data.cutoff_date || '');
-  const grsFamily = (data.grs_family || (template === 'PROCUREMENT_WORKING_FILES' ? 'GRS_1_1' : 'GRS_5_1')) as GrsFamily;
-  const custodian = String(data.owner ?? data.custodian ?? '');
-  const officer = String(data.officer || '');
-  const state = (data.state || 'DRAFT') as ProfileState;
-  const isFrozen = Boolean(data.is_frozen ?? (state !== 'DRAFT'));
-  const mappingAttempts = Number(data.mapping_attempts || 0);
-  const mappingOutcome = String(data.mapping_outcome || '');
-  const isMappingAccepted = Boolean(data.is_mapping_accepted);
-  const lastAttemptTimestamp = String(data.last_attempt_timestamp || '');
-  const successorId = Number(data.superseded_by ?? data.successor_id ?? 0);
-  const supersedes = Number(data.supersedes || 0);
-  const auditHoldActive = Boolean(data.audit_hold ?? data.audit_hold_active ?? false);
-  const auditHoldReason = String(data.audit_hold_reason || '');
-  const auditHoldTimestamp = String(data.audit_hold_timestamp || '');
-  const fingerprint = String(data.fingerprint || '');
-  const reviewRequested = Boolean(data.review_requested);
-  const reviewRequestedAt = String(data.review_requested_at || '');
-  const reviewDecided = Boolean(data.review_decided);
-  const reviewAction = (data.review_action || 'NONE') as ReviewAction;
-  const reviewReason = String(data.review_reason || '');
+function hasOwn(data: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(data, key);
+}
+
+function readString(data: Record<string, unknown>, key: string, recordName: string, nonEmpty = false): string {
+  if (!hasOwn(data, key) || typeof data[key] !== 'string') {
+    invalidContractRead(recordName, `${key} must be a string`);
+  }
+  const value = data[key] as string;
+  if (nonEmpty && value.trim() === '') {
+    invalidContractRead(recordName, `${key} must not be empty`);
+  }
+  return value;
+}
+
+function readOptionalString(data: Record<string, unknown>, key: string, recordName: string): string {
+  return hasOwn(data, key) ? readString(data, key, recordName) : '';
+}
+
+function readBoolean(data: Record<string, unknown>, key: string, recordName: string): boolean {
+  if (!hasOwn(data, key) || typeof data[key] !== 'boolean') {
+    invalidContractRead(recordName, `${key} must be a boolean`);
+  }
+  return data[key] as boolean;
+}
+
+function readInteger(
+  data: Record<string, unknown>,
+  key: string,
+  recordName: string,
+  min = 0,
+  max = Number.MAX_SAFE_INTEGER,
+): number {
+  if (!hasOwn(data, key) || typeof data[key] !== 'number' || !Number.isSafeInteger(data[key])) {
+    invalidContractRead(recordName, `${key} must be a safe integer`);
+  }
+  const value = data[key] as number;
+  if (value < min || value > max) {
+    invalidContractRead(recordName, `${key} is outside the allowed range`);
+  }
+  return value;
+}
+
+function readEnum<T extends string>(
+  data: Record<string, unknown>,
+  key: string,
+  recordName: string,
+  values: ReadonlySet<string>,
+  allowEmpty = false,
+): T {
+  const value = readString(data, key, recordName);
+  if ((allowEmpty && value === '') || values.has(value)) {
+    return value as T;
+  }
+  invalidContractRead(recordName, `${key} has an unsupported enum value`);
+}
+
+function readAliasedString(
+  data: Record<string, unknown>,
+  keys: readonly string[],
+  recordName: string,
+  nonEmpty = false,
+): string {
+  const present = keys.filter((key) => hasOwn(data, key));
+  if (present.length === 0) invalidContractRead(recordName, `requires one of ${keys.join(', ')}`);
+  const values = present.map((key) => readString(data, key, recordName, nonEmpty));
+  if (values.some((value) => value !== values[0])) {
+    invalidContractRead(recordName, `conflicting aliases: ${present.join(', ')}`);
+  }
+  return values[0];
+}
+
+function readAliasedBoolean(
+  data: Record<string, unknown>,
+  keys: readonly string[],
+  recordName: string,
+): boolean {
+  const present = keys.filter((key) => hasOwn(data, key));
+  if (present.length === 0) invalidContractRead(recordName, `requires one of ${keys.join(', ')}`);
+  const values = present.map((key) => readBoolean(data, key, recordName));
+  if (values.some((value) => value !== values[0])) {
+    invalidContractRead(recordName, `conflicting aliases: ${present.join(', ')}`);
+  }
+  return values[0];
+}
+
+function readAliasedInteger(
+  data: Record<string, unknown>,
+  keys: readonly string[],
+  recordName: string,
+  min = 0,
+): number {
+  const present = keys.filter((key) => hasOwn(data, key));
+  if (present.length === 0) invalidContractRead(recordName, `requires one of ${keys.join(', ')}`);
+  const values = present.map((key) => readInteger(data, key, recordName, min));
+  if (values.some((value) => value !== values[0])) {
+    invalidContractRead(recordName, `conflicting aliases: ${present.join(', ')}`);
+  }
+  return values[0];
+}
+
+function validateAttributesJson(attributesJson: string, recordName: string): void {
+  try {
+    const parsed = JSON.parse(attributesJson) as unknown;
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      invalidContractRead(recordName, 'attributes_json must encode an object');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'parse error';
+    invalidContractRead(recordName, `attributes_json is malformed (${message})`);
+  }
+}
+
+export function normalizeProfileRecord(raw: unknown): ProfileRecord {
+  const recordName = 'Profile record';
+  const data = parseRecord(raw, recordName);
+  const profileId = readAliasedInteger(data, ['profile_id', 'id'], recordName, 1);
+  const clientNonce = readAliasedString(data, ['client_nonce', 'nonce'], recordName, true);
+  const template = readEnum<TemplateType>(data, 'template', recordName, TEMPLATES);
+  const attributesJson = readString(data, 'attributes_json', recordName, true);
+  validateAttributesJson(attributesJson, recordName);
+  const creationDate = readString(data, 'creation_date', recordName, true);
+  const cutoffDate = readString(data, 'cutoff_date', recordName, true);
+  const grsFamily = readEnum<GrsFamily>(data, 'grs_family', recordName, GRS_FAMILIES);
+  const custodian = readAliasedString(data, ['owner', 'custodian'], recordName, true);
+  const officer = readString(data, 'officer', recordName, true);
+  const state = readEnum<ProfileState>(data, 'state', recordName, PROFILE_STATES);
+  const isFrozen = readBoolean(data, 'is_frozen', recordName);
+  const mappingAttempts = readInteger(data, 'mapping_attempts', recordName, 0, 3);
+  const mappingOutcome = readEnum<MappingOutcome>(data, 'mapping_outcome', recordName, MAPPING_OUTCOMES, true);
+  const isMappingAccepted = readBoolean(data, 'is_mapping_accepted', recordName);
+  const lastAttemptTimestamp = readOptionalString(data, 'last_attempt_timestamp', recordName);
+  const successorId = readAliasedInteger(data, ['superseded_by', 'successor_id'], recordName, 0);
+  const supersedes = readInteger(data, 'supersedes', recordName, 0);
+  const auditHoldActive = readAliasedBoolean(data, ['audit_hold', 'audit_hold_active'], recordName);
+  const auditHoldReason = readString(data, 'audit_hold_reason', recordName);
+  const auditHoldTimestamp = readOptionalString(data, 'audit_hold_timestamp', recordName);
+  const fingerprint = readString(data, 'fingerprint', recordName, true);
+  const reviewRequested = readBoolean(data, 'review_requested', recordName);
+  const reviewRequestedAt = readString(data, 'review_requested_at', recordName);
+  const reviewDecided = readBoolean(data, 'review_decided', recordName);
+  const reviewAction = readEnum<ReviewAction>(data, 'review_action', recordName, REVIEW_ACTIONS, true) || 'NONE';
+  const reviewReason = readString(data, 'review_reason', recordName);
+
+  if (!reviewRequested && reviewRequestedAt !== '') {
+    invalidContractRead(recordName, 'review_requested_at must be empty when review_requested is false');
+  }
+  if (reviewDecided && (!reviewRequested || reviewAction === 'NONE')) {
+    invalidContractRead(recordName, 'decided review must have a requested review and action');
+  }
 
   return {
     profile_id: profileId,
@@ -99,46 +261,39 @@ export function normalizeProfileRecord(raw: any): ProfileRecord {
   };
 }
 
-export function normalizeMappingRecord(raw: any): MappingRecord {
-  if (raw === null || raw === undefined) {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Mapping record is null or undefined');
-  }
-  let data = raw;
-  if (typeof raw === 'string') {
-    try {
-      data = JSON.parse(raw);
-    } catch (e: any) {
-      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed mapping JSON (${e?.message || 'parse error'})`);
-    }
-  }
-  if (!data || typeof data !== 'object') {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Mapping record is not an object');
-  }
+export function normalizeMappingRecord(raw: unknown): MappingRecord {
+  const recordName = 'Mapping record';
+  const data = parseRecord(raw, recordName);
+  const profileId = readInteger(data, 'profile_id', recordName, 1);
+  const attempt = readInteger(data, 'attempt', recordName, 1, 3);
+  const outcome = readEnum<MappingOutcome>(data, 'outcome', recordName, MAPPING_OUTCOMES);
+  const scheduleNumber = readString(data, 'schedule_number', recordName);
+  const scheduleTitle = readString(data, 'schedule_title', recordName);
+  const scheduleVersion = readString(data, 'schedule_version', recordName);
+  const sourceUrl = readAliasedString(data, ['source_url', 'pdf_url'], recordName);
+  const pdfUrl = readAliasedString(data, ['pdf_url', 'source_url'], recordName);
+  const pdfFingerprint = readString(data, 'pdf_fingerprint', recordName);
+  const item = readAliasedString(data, ['item_number', 'item'], recordName);
+  const dispositionAuthority = readString(data, 'disposition_authority', recordName);
+  const page = readAliasedString(data, ['page_or_section', 'page'], recordName);
+  const isIncluded = readBoolean(data, 'is_included', recordName);
+  const isExcluded = readBoolean(data, 'is_excluded', recordName);
+  const rawDispositionClass = readEnum<string>(data, 'disposition_class', recordName, DISPOSITION_CLASSES);
+  const dispositionClass: DispositionClass =
+    (rawDispositionClass === 'NONE' ? 'NOT_APPLICABLE' : rawDispositionClass) as DispositionClass;
+  const cutoffTrigger = readEnum<CutoffTrigger>(data, 'cutoff_trigger', recordName, CUTOFF_TRIGGERS);
+  const retentionMonths = readInteger(data, 'retention_months', recordName, 0);
+  const consequentialFingerprint = readString(data, 'consequential_fingerprint', recordName);
+  const reasonCode = readString(data, 'reason_code', recordName);
+  const earliestReviewDate = readString(data, 'earliest_review_date', recordName);
+  const assessedAt = readString(data, 'assessed_at', recordName, true);
+  const isAccepted = readBoolean(data, 'is_accepted', recordName);
+  const acceptedBy = readOptionalString(data, 'accepted_by', recordName);
+  const acceptedTimestamp = readAliasedString(data, ['accepted_at', 'accepted_timestamp'], recordName);
 
-  const profileId = Number(data.profile_id ?? 0);
-  const attempt = Number(data.attempt ?? 0);
-  const outcome = (data.outcome || 'UNRESOLVED') as MappingOutcome;
-  const scheduleNumber = String(data.schedule_number || '');
-  const scheduleTitle = String(data.schedule_title || '');
-  const scheduleVersion = String(data.schedule_version || '');
-  const sourceUrl = String(data.source_url ?? data.pdf_url ?? '');
-  const pdfUrl = String(data.pdf_url ?? data.source_url ?? '');
-  const pdfFingerprint = String(data.pdf_fingerprint || '');
-  const item = String(data.item_number ?? data.item ?? '');
-  const dispositionAuthority = String(data.disposition_authority || '');
-  const page = String(data.page_or_section ?? data.page ?? '');
-  const isIncluded = Boolean(data.is_included);
-  const isExcluded = Boolean(data.is_excluded);
-  const dispositionClass = (data.disposition_class || 'NOT_APPLICABLE') as DispositionClass;
-  const cutoffTrigger = (data.cutoff_trigger || 'NONE') as CutoffTrigger;
-  const retentionMonths = Number(data.retention_months || 0);
-  const consequentialFingerprint = String(data.consequential_fingerprint || '');
-  const reasonCode = String(data.reason_code || '');
-  const earliestReviewDate = String(data.earliest_review_date || '');
-  const assessedAt = String(data.assessed_at || '');
-  const isAccepted = Boolean(data.is_accepted);
-  const acceptedBy = String(data.accepted_by || '');
-  const acceptedTimestamp = String(data.accepted_at ?? data.accepted_timestamp ?? '');
+  if (isAccepted && acceptedTimestamp === '') {
+    invalidContractRead(recordName, 'accepted_at must be non-empty when is_accepted is true');
+  }
 
   return {
     profile_id: profileId,
@@ -171,34 +326,38 @@ export function normalizeMappingRecord(raw: any): MappingRecord {
   };
 }
 
-export function normalizeReviewRecord(raw: any): ReviewRecord {
-  if (raw === null || raw === undefined) {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Review record is null or undefined');
+export function normalizeReviewRecord(raw: unknown): ReviewRecord {
+  const recordName = 'Review record';
+  const data = parseRecord(raw, recordName);
+  const profileId = readInteger(data, 'profile_id', recordName, 1);
+  const epoch = readInteger(data, 'epoch', recordName, 1);
+  const requestedAt = readAliasedString(data, ['requested_at', 'requested_timestamp'], recordName, true);
+  const reviewRequested = hasOwn(data, 'review_requested')
+    ? readBoolean(data, 'review_requested', recordName)
+    : requestedAt !== '';
+  const requestedBy = readOptionalString(data, 'requested_by', recordName);
+  const decided = hasOwn(data, 'decided')
+    ? readBoolean(data, 'decided', recordName)
+    : readBoolean(data, 'is_decided', recordName);
+  if (hasOwn(data, 'decided') && hasOwn(data, 'is_decided') && readBoolean(data, 'decided', recordName) !== readBoolean(data, 'is_decided', recordName)) {
+    invalidContractRead(recordName, 'conflicting aliases: decided, is_decided');
   }
-  let data = raw;
-  if (typeof raw === 'string') {
-    try {
-      data = JSON.parse(raw);
-    } catch (e: any) {
-      throw new Error(`INVALID_CONTRACT_READ_RESPONSE: Malformed review JSON (${e?.message || 'parse error'})`);
-    }
-  }
-  if (!data || typeof data !== 'object') {
-    throw new Error('INVALID_CONTRACT_READ_RESPONSE: Review record is not an object');
-  }
+  const decidedAt = readAliasedString(data, ['decided_at', 'decided_timestamp'], recordName);
+  const officer = readString(data, 'officer', recordName, true);
+  const decidedBy = readOptionalString(data, 'decided_by', recordName);
+  const action = readEnum<ReviewAction>(data, 'action', recordName, REVIEW_ACTIONS, true) || 'NONE';
+  const reasonCode = readString(data, 'reason_code', recordName);
+  const auditHoldActive = readBoolean(data, 'audit_hold_active', recordName);
 
-  const profileId = Number(data.profile_id ?? 0);
-  const epoch = Number(data.epoch ?? 0);
-  const requestedAt = String(data.requested_at ?? data.requested_timestamp ?? '');
-  const reviewRequested = Boolean(data.review_requested ?? (requestedAt ? true : false));
-  const requestedBy = String(data.requested_by || '');
-  const decided = Boolean(data.decided ?? data.is_decided ?? false);
-  const decidedAt = String(data.decided_at ?? data.decided_timestamp ?? '');
-  const officer = String(data.officer || '');
-  const decidedBy = String(data.decided_by || '');
-  const action = (data.action || 'NONE') as ReviewAction;
-  const reasonCode = String(data.reason_code || '');
-  const auditHoldActive = Boolean(data.audit_hold_active);
+  if (reviewRequested !== (requestedAt !== '')) {
+    invalidContractRead(recordName, 'review_requested must match requested_at presence');
+  }
+  if (decided && (decidedAt === '' || action === 'NONE')) {
+    invalidContractRead(recordName, 'decided review must have decided_at and action');
+  }
+  if (!decided && decidedAt !== '') {
+    invalidContractRead(recordName, 'decided_at must be empty when decided is false');
+  }
 
   return {
     profile_id: profileId,

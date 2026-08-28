@@ -85,7 +85,10 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
         audit_hold_timestamp: '',
         fingerprint: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
         review_requested: false,
+        review_requested_at: '',
         review_decided: false,
+        review_action: '',
+        review_reason: '',
       };
 
       const normalized = normalizeProfileRecord(rawLiveProfile);
@@ -144,7 +147,6 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
       const rawLiveReview = {
         profile_id: 2,
         epoch: 1,
-        review_requested: true,
         requested_at: '2030-06-01T08:00:00Z',
         decided: true,
         decided_at: '2030-06-02T10:00:00Z',
@@ -191,6 +193,83 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
       expect(() => normalizeReviewRecord(null)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
       expect(() => normalizeReviewRecord(undefined)).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
     });
+
+    it('rejects incomplete, mistyped, conflicting, and unknown-enum records without defaults', () => {
+      const validProfile = {
+        profile_id: 1,
+        client_nonce: 'FY24-PROC-001',
+        template: 'PROCUREMENT_WORKING_FILES',
+        attributes_json: '{"record_copy_status":"OFFICIAL_RECORD"}',
+        creation_date: '2024-01-01',
+        cutoff_date: '2024-06-01',
+        grs_family: 'GRS_1_1',
+        owner: '0x1111111111111111111111111111111111111111',
+        officer: '0x2222222222222222222222222222222222222222',
+        state: 'MAPPED',
+        is_frozen: true,
+        mapping_attempts: 1,
+        mapping_outcome: 'TEMPORARY_ITEM_MATCH',
+        is_mapping_accepted: true,
+        audit_hold: false,
+        audit_hold_reason: '',
+        review_requested: false,
+        review_requested_at: '',
+        review_decided: false,
+        review_action: '',
+        review_reason: '',
+        superseded_by: 0,
+        supersedes: 0,
+        fingerprint: 'profile-fingerprint',
+      };
+      const validMapping = {
+        profile_id: 1,
+        attempt: 1,
+        outcome: 'TEMPORARY_ITEM_MATCH',
+        schedule_number: 'GRS 1.1',
+        schedule_title: 'Financial Management and Reporting Records',
+        schedule_version: 'Transmittal 31 / April 2020',
+        source_url: 'https://www.archives.gov/source.csv',
+        pdf_fingerprint: 'pdf-fingerprint',
+        item_number: '010',
+        disposition_authority: 'DAA-GRS-2013-0003-0001',
+        page_or_section: '3',
+        is_included: true,
+        is_excluded: false,
+        disposition_class: 'TEMPORARY',
+        cutoff_trigger: 'FINAL_PAYMENT_OR_CANCELLATION',
+        retention_months: 72,
+        earliest_review_date: '2030-06-01',
+        consequential_fingerprint: 'consequential-fingerprint',
+        reason_code: 'EXACT_MATCH',
+        assessed_at: '2024-06-01T12:00:00Z',
+        is_accepted: true,
+        accepted_at: '2024-06-02T09:30:00Z',
+      };
+      const validReview = {
+        profile_id: 1,
+        epoch: 1,
+        requested_at: '2030-06-01T08:00:00Z',
+        decided: true,
+        decided_at: '2030-06-02T10:00:00Z',
+        officer: '0x2222222222222222222222222222222222222222',
+        action: 'AUTHORIZE_DISPOSITION',
+        reason_code: 'OFFICER_APPROVED',
+        audit_hold_active: false,
+      };
+
+      expect(() => normalizeProfileRecord({})).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeMappingRecord({})).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeReviewRecord({})).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord({ ...validProfile, is_frozen: 'true' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord({ ...validProfile, state: 'NOT_A_STATE' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord({ ...validProfile, attributes_json: '{' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeProfileRecord({ ...validProfile, owner: 'owner-a', custodian: 'owner-b' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeMappingRecord({ ...validMapping, outcome: 'NOT_A_RESULT' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeMappingRecord({ ...validMapping, retention_months: '72' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeMappingRecord({ ...validMapping, is_accepted: true, accepted_at: '' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeReviewRecord({ ...validReview, decided: 'true' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+      expect(() => normalizeReviewRecord({ ...validReview, action: 'NOT_A_REVIEW_ACTION' })).toThrow(/INVALID_CONTRACT_READ_RESPONSE/);
+    });
   });
 
   it('reads profile, mapping, review, is_nonce_used, and source metadata through normalized public boundary', async () => {
@@ -212,18 +291,28 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
           owner: dummyAccount,
           officer: '0x8888888888888888888888888888888888888888',
           state: 'FROZEN',
+          is_frozen: true,
           mapping_attempts: 1,
+          mapping_outcome: 'TEMPORARY_ITEM_MATCH',
+          is_mapping_accepted: false,
           last_attempt_timestamp: '2024-06-01T12:00:00Z',
           superseded_by: 0,
+          supersedes: 0,
           audit_hold: false,
           audit_hold_reason: '',
           audit_hold_timestamp: '',
           fingerprint: 'fp123',
+          review_requested: false,
+          review_requested_at: '',
+          review_decided: false,
+          review_action: '',
+          review_reason: '',
         };
       }
       if (functionName === 'get_mapping') {
         return {
           profile_id: 1,
+          attempt: 1,
           outcome: 'TEMPORARY_ITEM_MATCH',
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
@@ -241,6 +330,7 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
           consequential_fingerprint: 'cq_fp',
           reason_code: 'UNIQUE_MATCH',
           earliest_review_date: '2030-06-01',
+          assessed_at: '2024-06-01T12:00:00Z',
           is_accepted: false,
           accepted_at: '',
         };
@@ -248,12 +338,15 @@ describe('ContractService (Exact ABI Parity, Live Schema Normalization & Pipelin
       if (functionName === 'get_review') {
         return {
           profile_id: 1,
-          review_requested: false,
-          requested_at: '',
+          epoch: 1,
+          review_requested: true,
+          requested_at: '2024-06-01T08:00:00Z',
           decided: false,
+          decided_at: '',
+          officer: '0x8888888888888888888888888888888888888888',
           action: 'NONE',
           reason_code: '',
-          decided_at: '',
+          audit_hold_active: false,
         };
       }
       if (functionName === 'get_source_metadata') {

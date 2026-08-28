@@ -551,7 +551,10 @@ describe('UI Components & Screen Journeys', () => {
       audit_hold_timestamp: '',
       fingerprint: 'fp1',
       review_requested: false,
+      review_requested_at: '',
       review_decided: false,
+      review_action: '',
+      review_reason: '',
     };
 
     const rawMapping1 = {
@@ -574,6 +577,7 @@ describe('UI Components & Screen Journeys', () => {
       consequential_fingerprint: 'cq_fp1',
       reason_code: 'UNIQUE_MATCH',
       earliest_review_date: '2030-06-01',
+      assessed_at: '2024-06-01T12:00:00Z',
       is_accepted: true,
       accepted_at: '2024-06-02T10:00:00Z',
     };
@@ -627,6 +631,7 @@ describe('UI Components & Screen Journeys', () => {
       consequential_fingerprint: 'cq_fp2',
       reason_code: 'EXACT_MATCH',
       earliest_review_date: '2020-06-01',
+      assessed_at: '2020-06-01T12:00:00Z',
       is_accepted: true,
       accepted_at: '2020-06-02T10:00:00Z',
     };
@@ -667,7 +672,10 @@ describe('UI Components & Screen Journeys', () => {
       audit_hold_timestamp: '',
       fingerprint: 'fp3',
       review_requested: false,
+      review_requested_at: '',
       review_decided: false,
+      review_action: '',
+      review_reason: '',
     };
 
     it('renders PublicLookup dossier cleanly for Profile 1 (has mapping, no review)', async () => {
