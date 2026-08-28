@@ -150,6 +150,8 @@ export interface SourceMetadata {
   schedule_number: string;
   schedule_title: string;
   schedule_version: string;
+  source_url?: string;
+  csv_url?: string;
   pdf_url: string;
 }
 

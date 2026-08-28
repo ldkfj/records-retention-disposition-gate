@@ -460,7 +460,7 @@ describe('UI Components & Screen Journeys', () => {
     );
   });
 
-  it('renders SourceEvidenceView with official NARA PDF URLs and parity cards', async () => {
+  it('renders SourceEvidenceView with authoritative NARA CSV and provenance PDF URLs', async () => {
     vi.spyOn(contractService, 'getSourceMetadata').mockImplementation(async (tpl) => {
       if (tpl === 'PROCUREMENT_WORKING_FILES') {
         return {
@@ -469,7 +469,9 @@ describe('UI Components & Screen Journeys', () => {
           schedule_number: 'GRS 1.1',
           schedule_title: 'Financial Management and Reporting Records',
           schedule_version: 'Transmittal 31 / April 2020',
-          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+          source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+          csv_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+          pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs01-1.pdf',
         };
       }
       return {
@@ -478,7 +480,9 @@ describe('UI Components & Screen Journeys', () => {
         schedule_number: 'GRS 5.1',
         schedule_title: 'Common Office Records',
         schedule_version: 'Transmittal 28 / July 2017',
-        pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+        source_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+        csv_url: 'https://www.archives.gov/files/records-mgmt/grs/grs-csv-transmittal36.csv',
+        pdf_url: 'https://www.archives.gov/files/records-mgmt/grs/grs05-1.pdf',
       };
     });
 
@@ -492,6 +496,9 @@ describe('UI Components & Screen Journeys', () => {
     expect(container?.textContent).toContain('GRS 5.1: Common Office Records');
     expect(container?.textContent).toContain('Transmittal 31 / April 2020');
     expect(container?.textContent).toContain('Transmittal 28 / July 2017');
+    expect(container?.textContent).toContain('Authoritative NARA CSV URL:');
+    expect(container?.textContent).toContain('Provenance PDF (reference only):');
+    expect(container?.textContent).not.toContain('validators independently fetch and verify allowlisted official National Archives and Records Administration (NARA) schedule PDFs');
   });
 
   it('renders EventTimeline with filterable table', async () => {

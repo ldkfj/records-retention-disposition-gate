@@ -34,7 +34,7 @@ export const SourceEvidenceView: React.FC = () => {
         <h2 className="card-title">Official NARA General Records Schedules (GRS) Evidence</h2>
       </div>
       <p className="card-desc">
-        RRDG validators independently fetch and verify allowlisted official National Archives and Records Administration (NARA) schedule PDFs. {loading && '(Loading metadata...)'}
+        RRDG validators independently fetch and verify rows from the allowlisted official National Archives and Records Administration (NARA) schedule CSV. Linked PDFs are provenance references only. {loading && '(Loading metadata...)'}
       </p>
 
       {error && (
@@ -58,7 +58,20 @@ export const SourceEvidenceView: React.FC = () => {
             <span className="dossier-value mono">PROCUREMENT_WORKING_FILES</span>
           </div>
           <div className="dossier-grid">
-            <span className="dossier-label">Official PDF URL:</span>
+            <span className="dossier-label">Authoritative NARA CSV URL:</span>
+            <span className="dossier-value">
+              <a
+                href={OFFICIAL_NARA_SOURCES.PROCUREMENT_WORKING_FILES.csvUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: 'var(--navy-primary)' }}
+              >
+                {OFFICIAL_NARA_SOURCES.PROCUREMENT_WORKING_FILES.csvUrl} &rarr;
+              </a>
+            </span>
+          </div>
+          <div className="dossier-grid">
+            <span className="dossier-label">Provenance PDF (reference only):</span>
             <span className="dossier-value">
               <a
                 href={OFFICIAL_NARA_SOURCES.PROCUREMENT_WORKING_FILES.pdfUrl}
@@ -122,7 +135,20 @@ export const SourceEvidenceView: React.FC = () => {
             <span className="dossier-value mono">ADMINISTRATIVE_POLICY_FILES</span>
           </div>
           <div className="dossier-grid">
-            <span className="dossier-label">Official PDF URL:</span>
+            <span className="dossier-label">Authoritative NARA CSV URL:</span>
+            <span className="dossier-value">
+              <a
+                href={OFFICIAL_NARA_SOURCES.ADMINISTRATIVE_POLICY_FILES.csvUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: 'var(--navy-primary)' }}
+              >
+                {OFFICIAL_NARA_SOURCES.ADMINISTRATIVE_POLICY_FILES.csvUrl} &rarr;
+              </a>
+            </span>
+          </div>
+          <div className="dossier-grid">
+            <span className="dossier-label">Provenance PDF (reference only):</span>
             <span className="dossier-value">
               <a
                 href={OFFICIAL_NARA_SOURCES.ADMINISTRATIVE_POLICY_FILES.pdfUrl}

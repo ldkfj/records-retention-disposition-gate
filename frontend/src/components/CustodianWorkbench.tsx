@@ -649,7 +649,7 @@ export const CustodianWorkbench: React.FC<CustodianWorkbenchProps> = ({
                   <span className="mono" style={{ fontSize: '12px' }}>FROZEN &rarr; MAPPED</span>
                 </button>
                 <span className="form-hint">
-                  Triggers GenLayer AI validator consensus to fetch NARA PDF and determine GRS item and retention.
+                  Triggers GenLayer validator consensus against the allowlisted NARA CSV to determine GRS item and retention.
                 </span>
               </div>
 
