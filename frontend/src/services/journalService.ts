@@ -1,5 +1,6 @@
 import { PendingOperation } from '../types/domain.ts';
 import { sharedRpc } from './rpcClient.ts';
+import { classifyTransaction } from './transactionClassifier.ts';
 
 const STORAGE_KEY = 'rrdg_pending_operations_v2';
 const STORAGE_PROBE_KEY = 'rrdg_storage_probe_check';
@@ -221,16 +222,9 @@ export class JournalService {
         // Must use getTransaction from genlayer-js SDK (not nonexistent getTransactionReceipt)
         const tx = await client.getTransaction({ hash: op.txHash });
         if (tx) {
-          const status = (tx.statusName || tx.transactionStatusName || tx.status || '').toString().toUpperCase();
-          const execRes = (tx.txExecutionResultName || tx.execution_result || tx.executionResult || '').toString().toUpperCase();
-
-          if (status === 'FINALIZED' || status === '7') {
-            const consensus = (tx.resultName || '').toString().toUpperCase();
-            const isSuccess =
-              (execRes === 'FINISHED_WITH_RETURN' || tx.txExecutionResult === 1) &&
-              (consensus === 'AGREE' || consensus === 'MAJORITY_AGREE');
-
-            if (isSuccess) {
+          const classification = classifyTransaction(tx);
+          if (classification.finalized) {
+            if (classification.success) {
               if (verifyEffect) {
                 const verified = await verifyEffect(op);
                 if (verified) {
@@ -250,7 +244,7 @@ export class JournalService {
             }
           }
 
-          if (status === 'CANCELED' || status === 'ERROR' || status === 'REVERTED') {
+          if (!classification.finalized && classification.failedStatus) {
             this.removeOperation(op.id);
             failed.push(op.id);
             continue;

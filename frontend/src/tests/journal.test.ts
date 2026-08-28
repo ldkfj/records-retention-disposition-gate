@@ -137,6 +137,32 @@ describe('JournalService (Durable Storage Probing, Single-Flight Locking & Recon
     expect(verifyMock).toHaveBeenCalled();
   });
 
+  it('reconciles verified live Studio snake_case transactions and releases the lock', async () => {
+    const op = {
+      id: 'op-live-studio',
+      type: 'freeze_profile' as const,
+      timestamp: Date.now(),
+      params: { profileId: 4 },
+      status: 'PRE_SIGN' as const,
+    };
+    journalService.savePendingOperation(op);
+    journalService.updateHash(op.id, '0xlive');
+    vi.spyOn(sharedRpc.getRawClient(), 'getTransaction').mockResolvedValue({
+      status: 'FINALIZED',
+      result: 6,
+      result_name: 'MAJORITY_AGREE',
+      consensus_data: {
+        leader_receipt: [{ execution_result: 'SUCCESS' }, { execution_result: 'SUCCESS' }],
+      },
+    });
+
+    const result = await journalService.reconcilePendingOperations();
+
+    expect(result.finalized).toContain(op.id);
+    expect(journalService.getPendingOperations()).toHaveLength(0);
+    expect(journalService.isLocked()).toBe(false);
+  });
+
   it('preserves unsubmitted draft operations without losing them as chain failures', async () => {
     const draftOp = {
       id: 'op-draft-1',

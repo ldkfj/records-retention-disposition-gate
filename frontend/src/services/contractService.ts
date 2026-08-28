@@ -3,6 +3,7 @@ import { CONTRACT_ADDRESS, STUDIONET_CONFIG } from '../config/chain.ts';
 import { sharedRpc } from './rpcClient.ts';
 import { walletService } from './walletService.ts';
 import { journalService } from './journalService.ts';
+import { classifyTransaction } from './transactionClassifier.ts';
 import {
   ProfileRecord,
   MappingRecord,
@@ -1159,47 +1160,29 @@ export class ContractService {
         // Use SDK getTransaction method
         const tx = await client.getTransaction({ hash: txHash });
         if (tx) {
-          const status = (tx.statusName || tx.transactionStatusName || tx.status || '').toString().toUpperCase();
-          const execRes = (tx.txExecutionResultName || tx.execution_result || tx.executionResult || '').toString().toUpperCase();
-          const consensus = (tx.resultName || tx.consensusResult || tx.consensus || '').toString().toUpperCase();
-
-          // SDK numeric status 7 is FINALIZED; 6 is UNDETERMINED.
-          if (status === 'FINALIZED' || status === '7') {
-
-            const isSuccess =
-              execRes === 'FINISHED_WITH_RETURN' ||
-              execRes === 'SUCCESS' ||
-              tx.txExecutionResult === 1 ||
-              execRes === 'SUCCESS';
-
-            const isError =
-              execRes === 'FINISHED_WITH_ERROR' ||
-              execRes === 'ERROR' ||
-              tx.txExecutionResult === 2 ||
-              tx.txExecutionResult === 3;
-
-            const consensusSucceeded = consensus === 'AGREE' || consensus === 'MAJORITY_AGREE';
-            if (isSuccess && !isError && consensusSucceeded) {
+          const classification = classifyTransaction(tx);
+          if (classification.finalized) {
+            if (classification.success) {
               return tx;
             }
 
-            if (isError) {
+            if (classification.executionError) {
               const errMsg = formatSafeError(
                 tx.error || tx.data || tx.result_data || 'Contract execution reverted on-chain'
               );
               throw new Error(`TRANSACTION_EXECUTION_FAILED: ${errMsg}`);
             }
 
-            if (!consensusSucceeded) {
-              throw new Error(`CONSENSUS_DISAGREEMENT: Finalized consensus result was '${consensus || 'MISSING'}'`);
+            if (classification.consensus !== 'AGREE' && classification.consensus !== 'MAJORITY_AGREE') {
+              throw new Error(`CONSENSUS_DISAGREEMENT: Finalized consensus result was '${classification.consensus || 'MISSING'}'`);
             }
 
             // Unknown execution result
-            throw new Error(`TRANSACTION_UNKNOWN_EXECUTION_RESULT: Execution result was '${execRes || 'MISSING'}'`);
+            throw new Error(`TRANSACTION_UNKNOWN_EXECUTION_RESULT: Execution result was '${classification.execution || 'MISSING'}'`);
           }
 
-          if (status === 'CANCELED' || status === 'ERROR' || status === 'REVERTED') {
-            throw new Error(`TRANSACTION_EXECUTION_FAILED: Transaction status was ${status}`);
+          if (classification.failedStatus) {
+            throw new Error(`TRANSACTION_EXECUTION_FAILED: Transaction status was ${classification.status}`);
           }
           // If status is ACCEPTED, PENDING, PROPOSING, COMMITTING, REVEALING, continue polling!
         }
