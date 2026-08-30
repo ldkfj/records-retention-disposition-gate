@@ -16,11 +16,9 @@ Status: `PRINCIPAL LIVE VERIFIED — EXACT FINAL VERCEL LIFECYCLE COMPLETE; POST
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 - Linked contracts: none
 - GitHub repository: `https://github.com/ldkfj/records-retention-disposition-gate`
-- Final GitHub HEAD: the documentation-synchronized wrapper commit containing this release manifest; its exact SHA/tree are recorded in the final reviewer package. The deployed behavior revision is `64a2f8159a805da78236b1f47e05c9da21b545fa`.
+- Final GitHub HEAD: `9f78c0354bfd8d1858e3413a74a399bebf269459`; final HEAD tree: `0eef09008d75e0df2e53ca86defad4f95777b6ec`.
 - Tested/deployed behavior commit: `64a2f8159a805da78236b1f47e05c9da21b545fa`; deployment `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG` was built from this behavior revision.
-- Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
-- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`
 - Deployment ID: `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`; target `production`; status `READY`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.

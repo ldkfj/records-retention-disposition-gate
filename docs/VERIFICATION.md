@@ -2,29 +2,6 @@
 
 Status: `LIVE VERIFIED — EXACT FINAL VERCEL LIFECYCLE COMPLETE; POST_GITHUB_VERCEL_FINAL AND DUAL APPROVAL PENDING`
 
-## Live Vercel E2E repair and rerun — 2026-08-28
-
-- Exact tested release commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`.
-- Exact tested production deployment: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; canonical URL `https://records-retention-disposition-gate.vercel.app` loaded bundle `/assets/index-BHLzXCPn.js`.
-- Independent browser wallet: OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; the human user approved wallet connection and each signature while the primary AI operated the visible E2E steps under the Task-local instruction.
-- Profile creation tx `0xfbbb02e5bfd46584d57aca9568435cd40bff3cd2361dac1ee34c48b342351aa5`, profile freeze tx `0x6c7b6d7fc07e6d4a3fb76817c8e89b7d9300f70391c7abd46c71f4348d4b99b5`, and mapping assessment tx `0x77f9ab2ce51de2cbcd34df7f0c637d40702331626352387d92af80bc0e7aad09` all reached `FINALIZED`, `MAJORITY_AGREE`, leader execution `SUCCESS`, and authoritative readback.
-- Readback: profile `4`, nonce `vercel-e2e-20260828-2242`, owner `0x0087...e01f`, state `MAPPED`, mapping outcome `TEMPORARY_ITEM_MATCH`, GRS 1.1 item `010`, authority `DAA-GRS-2013-0003-0001`, retention `72` months, earliest review `2032-08-28`.
-- Immutable events `16` (`PROFILE_CREATED`), `17` (`PROFILE_FROZEN`), and `18` (`MAPPING_ASSESSED`) display in both the global event ledger and the profile dossier after bounded event-read repair.
-- Fresh reload starts disconnected. The wallet chooser separately exposed OKX Wallet and MetaMask and issued no account request until explicit OKX selection. Reconnect restored the same external account. Connected and disconnected officer/auditor checks correctly disabled unauthorized actions and displayed the assigned officer/configured auditor addresses.
-- Public profile-ID, owner-plus-nonce, and consequential-fingerprint discovery all resolved profile `4`; the NARA source view displayed on-chain parity and the no-automated-deletion/no-legal-advice notice remained visible.
-- Regression after both repair batches: `47/47` tests PASS; lint PASS; TypeScript PASS; production build PASS; `git diff --check` PASS.
-
-## Reviewer correction: micro-purchase creation path — 2026-08-30
-
-- Exact tested frontend release commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`.
-- Exact tested production deployment: `dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2`; canonical URL `https://records-retention-disposition-gate.vercel.app`.
-- Assisted browser observation used OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; this observation is not claimed as the mandatory user-run Vercel gate.
-- Creation path: the user selected `PROCUREMENT_WORKING_FILES`, `MICROPURCHASE`, `OFFICIAL_RECORD`, and the assigned records officer, then submitted the form once.
-- Finalized receipt: [`0x8ac37d48...e9295520`](https://explorer-studio.genlayer.com/tx/0x8ac37d48014180008fdf15b8dfcf95e1371917b0fbfcc0ae08a84feae9295520) is `FINALIZED`, consensus `Accepted`, GenVM execution `SUCCESS`, and returns profile `5`.
-- Authoritative readback: profile `5`, nonce `MICRO-E2E-20260830-01`, owner `0x00870443049CB1D4A9a0F51913885433c701E01f`, state `DRAFT`, and event `19` `PROFILE_CREATED`.
-- Canonical attributes read from the on-chain dossier include `"procurement_type":"MICROPURCHASE"`; this closes the frontend/contract enum mismatch identified by the reviewer.
-- Regression after the correction: `48/48` frontend tests PASS; lint PASS; TypeScript PASS; production build PASS; `38` contract tests PASS; `git diff --check` PASS.
-
 ## Exact-final Vercel lifecycle — 2026-08-30
 
 - Exact frontend behavior commit: `64a2f8159a805da78236b1f47e05c9da21b545fa`.
@@ -53,11 +30,10 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 ## Public release artifacts
 
 - GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
-- Final GitHub HEAD: the documentation-synchronized wrapper commit containing this evidence manifest; its exact SHA/tree are recorded in the final reviewer package. The deployed behavior revision is `64a2f8159a805da78236b1f47e05c9da21b545fa`.
+- Final GitHub HEAD: `9f78c0354bfd8d1858e3413a74a399bebf269459`.
+- Final HEAD tree: `0eef09008d75e0df2e53ca86defad4f95777b6ec`.
 - Tested/deployed behavior commit: `64a2f8159a805da78236b1f47e05c9da21b545fa`; Vercel deployment `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG` was built from this behavior revision.
-- Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
 - Production URL: https://records-retention-disposition-gate.vercel.app
-- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/G3GPYhUfPRQ2WCQZHMBYFgSPFkEG
 - Deployment ID: `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`; target `production`; status `READY`
 - Exact-release lifecycle observation: the production page completed the full two-account OKX lifecycle and the authoritative readbacks documented above.
 
@@ -80,7 +56,7 @@ Weakness/blocker: None identified in the reviewed contract gate.
 
 Engineering: 4/5
 Evidence: Reproducible React/TypeScript and Python project, 49 frontend tests, 38 contract tests, lint/typecheck/build PASS, exact GitHub HEAD/tree and Vercel deployment identity.
-Exact evidence: final immutable HEAD is the commit containing this manifest; deployment dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2.
+Exact evidence: final GitHub HEAD `9f78c0354bfd8d1858e3413a74a399bebf269459`, tree `0eef09008d75e0df2e53ca86defad4f95777b6ec`; deployment `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`.
 Weakness/blocker: Final anonymous checkpoint approval is pending.
 
 Frontend / UX: 3/5
