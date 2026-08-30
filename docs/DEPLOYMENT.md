@@ -21,8 +21,8 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; USER-RUN VERCEL 
 - Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8` (tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`); the final HEAD adds documentation-only evidence synchronization and no behavior change.
 - Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
-- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/7KDhbKJCmErxtmdT13NrT6Ftmdt1`
-- Deployment ID: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; target `production`; status `READY`
+- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/rHYS9qMokjjn7Qd7TzZ3szhrfFg2`
+- Deployment ID: `dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2`; target `production`; status `READY`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.
 
