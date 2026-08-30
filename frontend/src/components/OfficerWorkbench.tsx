@@ -429,7 +429,7 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
                 type="submit"
                 className="btn btn-success"
                 disabled={
-                  profile.state !== 'REVIEW_REQUESTED' ||
+                  effectiveStatus !== 'REVIEW_REQUESTED' ||
                   review.is_decided ||
                   profile.audit_hold_active ||
                   !isAssignedOfficer
@@ -438,7 +438,7 @@ export const OfficerWorkbench: React.FC<OfficerWorkbenchProps> = ({
               >
                 {review.is_decided ? 'Review Already Decided' : 'Submit Formal Disposition Decision'}
               </button>
-              {profile.state !== 'REVIEW_REQUESTED' && !review.is_decided && (
+              {effectiveStatus !== 'REVIEW_REQUESTED' && !review.is_decided && (
                 <span className="form-hint" style={{ color: 'var(--text-muted)' }}>
                   Profile must be in REVIEW_REQUESTED state before officer decision can be rendered.
                 </span>

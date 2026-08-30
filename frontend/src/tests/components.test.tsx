@@ -383,7 +383,7 @@ describe('UI Components & Screen Journeys', () => {
       grs_family: 'GRS_1_1',
       custodian: '0x1111111111111111111111111111111111111111',
       officer: officerAddr,
-      state: 'REVIEW_REQUESTED',
+      state: 'MAPPED',
       mapping_attempts: 1,
       last_attempt_timestamp: '2024-06-01T12:00:00Z',
       successor_id: 0,
