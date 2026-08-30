@@ -21,11 +21,14 @@ export function classifyTransaction(tx: any): FinalizedTransactionClassification
   );
   const receipts = tx?.consensus_data?.leader_receipt;
   const receiptList = receipts ? (Array.isArray(receipts) ? receipts : [receipts]) : [];
+  const leaderReceipts = receiptList.some((receipt: any) => upper(receipt?.mode) === 'LEADER')
+    ? receiptList.filter((receipt: any) => upper(receipt?.mode) === 'LEADER')
+    : receiptList;
   const executions = [
     tx?.txExecutionResultName,
     tx?.execution_result,
     tx?.executionResult,
-    ...receiptList.map((receipt: any) => receipt?.execution_result ?? receipt?.executionResult),
+    ...leaderReceipts.map((receipt: any) => receipt?.execution_result ?? receipt?.executionResult),
   ]
     .map(upper)
     .filter(Boolean);

@@ -74,7 +74,7 @@ npm --prefix frontend test -- --run
 npm --prefix frontend run build
 ```
 
-Current baseline: 38 contract tests and 48 frontend tests pass; Ruff, typecheck, lint, and production build pass. Studionet transactions/readbacks are in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
+Current baseline: 38 contract tests and 49 frontend tests pass; Ruff, typecheck, lint, and production build pass. Studionet transactions/readbacks are in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
 
 ## Deployment
 

@@ -17,6 +17,19 @@ describe('classifyTransaction', () => {
     })).toMatchObject({ finalized: true, success: true });
   });
 
+  it('ignores quorum-cancelled validator receipts when the live leader succeeded', () => {
+    expect(classifyTransaction({
+      ...liveSuccess,
+      execution_result: 'SUCCESS',
+      consensus_data: {
+        leader_receipt: [
+          { mode: 'leader', execution_result: 'SUCCESS' },
+          { mode: 'validator', execution_result: 'ERROR' },
+        ],
+      },
+    })).toMatchObject({ finalized: true, success: true, executionError: false });
+  });
+
   it('preserves supported camelCase transaction shapes', () => {
     expect(classifyTransaction({
       statusName: 'FINALIZED',
