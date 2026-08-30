@@ -39,7 +39,7 @@ export const CustodianWorkbench: React.FC<CustodianWorkbenchProps> = ({
 
   // Procurement closed attributes
   const [recordCopyStatus, setRecordCopyStatus] = useState<'OFFICIAL_RECORD' | 'ADMIN_REFERENCE_COPY'>('OFFICIAL_RECORD');
-  const [procurementType, setProcurementType] = useState<'FORMAL_CONTRACT' | 'SIMPLIFIED_ACQUISITION' | 'MICRO_PURCHASE'>('FORMAL_CONTRACT');
+  const [procurementType, setProcurementType] = useState<'FORMAL_CONTRACT' | 'SIMPLIFIED_ACQUISITION' | 'MICROPURCHASE'>('FORMAL_CONTRACT');
   const [isFormalContract, setIsFormalContract] = useState<boolean>(true);
   const [contractConcluded, setContractConcluded] = useState<boolean>(true);
   const [includesUnsuccessfulBids, setIncludesUnsuccessfulBids] = useState<boolean>(false);
@@ -436,7 +436,7 @@ export const CustodianWorkbench: React.FC<CustodianWorkbenchProps> = ({
                     >
                       <option value="FORMAL_CONTRACT">FORMAL_CONTRACT</option>
                       <option value="SIMPLIFIED_ACQUISITION">SIMPLIFIED_ACQUISITION</option>
-                      <option value="MICRO_PURCHASE">MICRO_PURCHASE</option>
+                      <option value="MICROPURCHASE">MICROPURCHASE</option>
                     </select>
                   </div>
                   <div className="form-group">

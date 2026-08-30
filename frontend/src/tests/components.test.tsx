@@ -26,6 +26,11 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const setSelectValue = (select: HTMLSelectElement, value: string) => {
+  select.value = value;
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
 describe('UI Components & Screen Journeys', () => {
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
@@ -306,6 +311,48 @@ describe('UI Components & Screen Journeys', () => {
       expect.stringContaining('"record_copy_status":"OFFICIAL_RECORD"'),
       '2024-01-01',
       '2024-06-01',
+      'GRS_1_1',
+      '0x2222222222222222222222222222222222222222',
+      handleStepChange
+    );
+  });
+
+  it('submits the contract-compatible MICROPURCHASE value through the creation path', async () => {
+    const handleStepChange = vi.fn();
+
+    vi.spyOn(walletService, 'getState').mockReturnValue({
+      connected: true,
+      address: '0x1111111111111111111111111111111111111111',
+      chainId: 61999,
+      provider: {},
+      providerName: 'MetaMask',
+      isCorrectChain: true,
+    });
+    vi.spyOn(contractService, 'getProfileCount').mockResolvedValue(0);
+    const createSpy = vi.spyOn(contractService, 'createProfile').mockResolvedValue({
+      profileId: 1,
+      txHash: '0xmicropurchasetx',
+    });
+
+    await renderComponent(<CustodianWorkbench onStepChange={handleStepChange} />);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    setInputValue(container?.querySelector('#form-nonce') as HTMLInputElement, 'MICRO-CUST-001');
+    setInputValue(container?.querySelector('#form-officer') as HTMLInputElement, '0x2222222222222222222222222222222222222222');
+    setSelectValue(container?.querySelector('#attr-proc-type') as HTMLSelectElement, 'MICROPURCHASE');
+
+    await act(async () => {
+      container?.querySelector('form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+
+    expect(createSpy).toHaveBeenCalledWith(
+      'MICRO-CUST-001',
+      'PROCUREMENT_WORKING_FILES',
+      expect.stringContaining('"procurement_type":"MICROPURCHASE"'),
+      expect.any(String),
+      expect.any(String),
       'GRS_1_1',
       '0x2222222222222222222222222222222222222222',
       handleStepChange

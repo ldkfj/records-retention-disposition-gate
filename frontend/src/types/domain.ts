@@ -41,7 +41,7 @@ export type GrsFamily = 'GRS_1_1' | 'GRS_5_1';
 
 export interface ProcurementAttributes {
   record_copy_status: 'OFFICIAL_RECORD' | 'ADMIN_REFERENCE_COPY';
-  procurement_type?: 'FORMAL_CONTRACT' | 'SIMPLIFIED_ACQUISITION' | 'MICRO_PURCHASE';
+  procurement_type?: 'FORMAL_CONTRACT' | 'SIMPLIFIED_ACQUISITION' | 'MICROPURCHASE';
   is_formal_contract?: boolean;
   contract_concluded?: boolean;
   includes_unsuccessful_bids?: boolean;
