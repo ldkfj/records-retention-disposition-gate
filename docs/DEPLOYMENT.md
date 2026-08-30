@@ -1,6 +1,6 @@
 # Studionet Deployment and Recovery Manifest
 
-Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; USER-RUN VERCEL E2E AND FINAL REVIEW PENDING`
+Status: `PRINCIPAL LIVE VERIFIED — EXACT FINAL VERCEL LIFECYCLE COMPLETE; POST_GITHUB_VERCEL_FINAL AND DUAL APPROVAL PENDING`
 
 ## Principal deployment
 
@@ -16,18 +16,18 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; USER-RUN VERCEL 
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 - Linked contracts: none
 - GitHub repository: `https://github.com/ldkfj/records-retention-disposition-gate`
-- Final GitHub HEAD: the immutable commit containing this manifest (its parent evidence-manifest commit is `fc1394e4154db91d5fcc236a76628256ca7259a5`; the exact HEAD/tree are supplied in the final reviewer package).
-- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8` (tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`); all later commits are documentation-only evidence synchronization and contain no behavior change.
+- Final GitHub HEAD: the documentation-synchronized wrapper commit containing this release manifest; its exact SHA/tree are recorded in the final reviewer package. The deployed behavior revision is `64a2f8159a805da78236b1f47e05c9da21b545fa`.
+- Tested/deployed behavior commit: `64a2f8159a805da78236b1f47e05c9da21b545fa`; deployment `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG` was built from this behavior revision.
 - Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
-- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/rHYS9qMokjjn7Qd7TzZ3szhrfFg2`
-- Deployment ID: `dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2`; target `production`; status `READY`
+- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`
+- Deployment ID: `dpl_G3GPYhUfPRQ2WCQZHMBYFgSPFkEG`; target `production`; status `READY`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.
 
-An assisted observation verified the production chain/contract banner, workbench navigation, authoritative NARA CSV labels, provenance-only PDF labels, and profile 5 creation with canonical `MICROPURCHASE` attributes. It is not claimed as the mandatory user-run Vercel E2E gate. The user must perform the full advertised lifecycle on this exact production release before final approval.
+The exact production release completed the full two-account OKX lifecycle for profile 7: creation, freeze, consensus assessment, officer acceptance, owner review request, and officer disposition decision. Each receipt reached `FINALIZED`, consensus `Accepted`, execution `SUCCESS`, and authoritative readback; the final profile state is `DISPOSITION_AUTHORIZED`. The complete receipt set is recorded in `docs/VERIFICATION.md`.
 
-The micro-purchase creation receipt is [`0x8ac37d48...e9295520`](https://explorer-studio.genlayer.com/tx/0x8ac37d48014180008fdf15b8dfcf95e1371917b0fbfcc0ae08a84feae9295520): `FINALIZED`, consensus `Accepted`, GenVM execution `SUCCESS`, return value `5`. Authoritative profile/event readback is recorded in `docs/VERIFICATION.md`.
+The exact-final creation receipt is [`0xcac0ff3b...382c5`](https://explorer-studio.genlayer.com/tx/0xcac0ff3b03a4c5a3659fc29cb03cc52dcdb147de90ffa95ea31d6fa9a4d382c5): `FINALIZED`, consensus `Accepted`, GenVM execution `SUCCESS`, return value `7`. The remaining five exact-final receipts and authoritative readbacks are recorded in `docs/VERIFICATION.md`.
 
 The final procurement acceptance correction is transaction `0x0b52ec29ff869c50cd40fa61b0a8b98c7d696effae976b2c2bdd937faf0a681c`; finalized readback confirms profile 1 is mapping-accepted. The earlier malformed call is retained in `docs/VERIFICATION.md` as negative diagnostic evidence, not as a successful acceptance.
 

@@ -94,4 +94,4 @@ The principal release uses Studionet chain ID `61999` and contract `0xE679b4345B
 - It does not replace agency-specific schedules, resolve legal holds, or provide legal advice.
 - Interpretation is limited to closed templates and exact NARA rows encoded by the contract.
 - Studionet may reset; recovery depends on recorded source/constructor values and upgrader access.
-- The current release has an observed wallet creation/readback proof; the mandatory user-run full Vercel E2E and final anonymous checkpoint approval remain pending. See [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
+- The exact production release has a complete two-account OKX lifecycle proof from creation through disposition authorization; the final anonymous checkpoint approval remains pending. See [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
