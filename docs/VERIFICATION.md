@@ -1,6 +1,6 @@
 # Verification
 
-Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; PUBLIC E2E RERUN PASSED; FINAL REVIEW PENDING`
+Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; USER-RUN VERCEL E2E AND FINAL REVIEW PENDING`
 
 ## Live Vercel E2E repair and rerun — 2026-08-28
 
@@ -18,8 +18,9 @@ Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; PUBLIC E2E RERUN PASSED; F
 
 - Exact tested frontend release commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`.
 - Exact tested production deployment: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; canonical URL `https://records-retention-disposition-gate.vercel.app`.
-- Independent browser wallet: OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; the user approved the wallet signature for the creation transaction.
+- Assisted browser observation used OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; this observation is not claimed as the mandatory user-run Vercel gate.
 - Creation path: the user selected `PROCUREMENT_WORKING_FILES`, `MICROPURCHASE`, `OFFICIAL_RECORD`, and the assigned records officer, then submitted the form once.
+- Finalized receipt: [`0x8ac37d48...e9295520`](https://explorer-studio.genlayer.com/tx/0x8ac37d48014180008fdf15b8dfcf95e1371917b0fbfcc0ae08a84feae9295520) is `FINALIZED`, consensus `Accepted`, GenVM execution `SUCCESS`, and returns profile `5`.
 - Authoritative readback: profile `5`, nonce `MICRO-E2E-20260830-01`, owner `0x00870443049CB1D4A9a0F51913885433c701E01f`, state `DRAFT`, and event `19` `PROFILE_CREATED`.
 - Canonical attributes read from the on-chain dossier include `"procurement_type":"MICROPURCHASE"`; this closes the frontend/contract enum mismatch identified by the reviewer.
 - Regression after the correction: `48/48` frontend tests PASS; lint PASS; TypeScript PASS; production build PASS; `38` contract tests PASS; `git diff --check` PASS.
@@ -41,13 +42,45 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 ## Public release artifacts
 
 - GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
-- Exact GitHub commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`
-- Exact GitHub tree: `e619c2d0361f7427ba987f5269de642dd4c7b26d`
+- Final GitHub HEAD: `f7581aa9ccf5a8af04e615d6637193ff779da794`
+- Final GitHub HEAD tree: `dd21f3f8606b0127baf9682dee4d2d649a2d52f7`
+- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`, tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`; final HEAD is a documentation-only wrapper.
 - Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
 - Production URL: https://records-retention-disposition-gate.vercel.app
 - Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/7KDhbKJCmErxtmdT13NrT6Ftmdt1
 - Deployment ID: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; target `production`; status `READY`
-- Exact-release E2E: the production page passed the independent OKX-wallet creation path and authoritative readback documented above, with the user-approved signature and on-chain `MICROPURCHASE` attributes.
+- Exact-release assisted observation: the production page passed the OKX-wallet creation path and authoritative readback documented above, with on-chain `MICROPURCHASE` attributes. Mandatory user-run full lifecycle E2E on this exact release remains pending.
+
+## Evidence-based scorecard — current checkpoint
+
+```text
+GENLAYER SUBMISSION CATEGORY AND SCORECARD
+Category: PROJECT
+Validity gate: PASS
+
+GenLayer fit: 5/5
+Evidence: The deployed Intelligent Contract performs consensus-critical bounded NARA evidence matching; live Studio rows include finalized accepted and disagreement outcomes.
+Exact evidence: principal contract 0xE679b4345BF5AB03105A51Ef41743545139cD61C; docs/VERIFICATION.md Live Studio proof highlights.
+Weakness/blocker: Final user-run Vercel lifecycle proof is pending.
+
+Contract quality: 5/5
+Evidence: Closed schemas, fail-closed unresolved outcomes, role separation, lifecycle guards, upgrade controls, 38 contract tests, and finalized Studio matrix/readbacks.
+Exact evidence: contracts/records_retention_disposition_gate.py; tests/direct/; docs/VERIFICATION.md consolidated ledger.
+Weakness/blocker: None identified in the reviewed contract gate.
+
+Engineering: 4/5
+Evidence: Reproducible React/TypeScript and Python project, 48 frontend tests, 38 contract tests, lint/typecheck/build PASS, exact GitHub HEAD/tree and Vercel deployment identity.
+Exact evidence: final HEAD f7581aa9ccf5a8af04e615d6637193ff779da794; deployment dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1.
+Weakness/blocker: Final package still needs the mandatory user-run Vercel E2E and same-release full-lifecycle evidence.
+
+Frontend / UX: 3/5
+Evidence: Live workbenches connect to the deployed contract, expose provider selection, and the corrected MICROPURCHASE creation path reached finalized readback.
+Exact evidence: https://records-retention-disposition-gate.vercel.app; receipt 0x8ac37d48...e9295520; profile 5 readback.
+Weakness/blocker: Full advertised lifecycle has not yet been user-run and evidenced on the current production release.
+
+Overall evidence-based assessment: Strong valid PROJECT with a tested contract and corrected creation path, but the final user-operated release evidence is incomplete.
+Submission recommendation: NOT READY
+```
 
 ## Live Studio proof highlights
 

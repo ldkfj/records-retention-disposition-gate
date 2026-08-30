@@ -7,7 +7,7 @@ Records Retention Disposition Gate is a GenLayer application that maps frozen re
 - Studionet contract: [`0xE679...D61C`](https://explorer-studio.genlayer.com/address/0xE679b4345BF5AB03105A51Ef41743545139cD61C)
 - Deployment and recovery manifest: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 - Live proof: [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
-- GitHub revision: [`3c088d3`](https://github.com/ldkfj/records-retention-disposition-gate/commit/3c088d34cddee52ee0ed8d5cf20d100a33a875f8)
+- Final GitHub revision: [`f7581aa`](https://github.com/ldkfj/records-retention-disposition-gate/commit/f7581aa9ccf5a8af04e615d6637193ff779da794) (documentation-only wrapper around tested behavior commit [`3c088d3`](https://github.com/ldkfj/records-retention-disposition-gate/commit/3c088d34cddee52ee0ed8d5cf20d100a33a875f8))
 - Live web application: [`records-retention-disposition-gate.vercel.app`](https://records-retention-disposition-gate.vercel.app)
 
 ## Trust problem
@@ -74,7 +74,7 @@ npm --prefix frontend test -- --run
 npm --prefix frontend run build
 ```
 
-Current baseline: 38 contract tests and 42 frontend tests pass; Ruff, typecheck, lint, and production build pass. Studionet transactions/readbacks are in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
+Current baseline: 38 contract tests and 48 frontend tests pass; Ruff, typecheck, lint, and production build pass. Studionet transactions/readbacks are in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
 
 ## Deployment
 
@@ -94,4 +94,4 @@ The principal release uses Studionet chain ID `61999` and contract `0xE679b4345B
 - It does not replace agency-specific schedules, resolve legal holds, or provide legal advice.
 - Interpretation is limited to closed templates and exact NARA rows encoded by the contract.
 - Studionet may reset; recovery depends on recorded source/constructor values and upgrader access.
-- Independent-wallet Vercel E2E passed on the exact public release; final anonymous checkpoint approval remains pending. See [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
+- The current release has an observed wallet creation/readback proof; the mandatory user-run full Vercel E2E and final anonymous checkpoint approval remain pending. See [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
