@@ -16,16 +16,16 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; VERCEL INDEPENDE
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 - Linked contracts: none
 - GitHub repository: `https://github.com/ldkfj/records-retention-disposition-gate`
-- GitHub release commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`
-- GitHub release tree: `9295c29c041692b74bedf2108159a8f8ef545e8c`
+- GitHub release commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`
+- GitHub release tree: `e619c2d0361f7427ba987f5269de642dd4c7b26d`
 - Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
-- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/22qhwuy0a`
-- Deployment ID: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; target `production`; status `READY`
+- Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/7KDhbKJCmErxtmdT13NrT6Ftmdt1`
+- Deployment ID: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; target `production`; status `READY`
 
 The consequential matrix is documented in `docs/VERIFICATION.md`. Direct Studionet code readback matches the reviewed source byte-for-byte.
 
-The exact production release passed independent-wallet E2E with user-approved OKX connection and signatures while the primary AI operated the visible flow. The chain/contract banner, workbench navigation, authoritative NARA CSV labels, provenance-only PDF labels, profile 4 lifecycle, and immutable events 16-18 were verified.
+The exact production release passed independent-wallet E2E with user-approved OKX connection and signature while the primary AI operated the visible flow. The chain/contract banner, workbench navigation, authoritative NARA CSV labels, provenance-only PDF labels, and profile 5 creation with canonical `MICROPURCHASE` attributes were verified.
 
 The final procurement acceptance correction is transaction `0x0b52ec29ff869c50cd40fa61b0a8b98c7d696effae976b2c2bdd937faf0a681c`; finalized readback confirms profile 1 is mapping-accepted. The earlier malformed call is retained in `docs/VERIFICATION.md` as negative diagnostic evidence, not as a successful acceptance.
 

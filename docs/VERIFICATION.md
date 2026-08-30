@@ -14,6 +14,16 @@ Status: `LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; PUBLIC E2E RERUN PASSED; F
 - Public profile-ID, owner-plus-nonce, and consequential-fingerprint discovery all resolved profile `4`; the NARA source view displayed on-chain parity and the no-automated-deletion/no-legal-advice notice remained visible.
 - Regression after both repair batches: `47/47` tests PASS; lint PASS; TypeScript PASS; production build PASS; `git diff --check` PASS.
 
+## Reviewer correction: micro-purchase creation path — 2026-08-30
+
+- Exact tested frontend release commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`.
+- Exact tested production deployment: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; canonical URL `https://records-retention-disposition-gate.vercel.app`.
+- Independent browser wallet: OKX Wallet `0x00870443049CB1D4A9a0F51913885433c701E01f` on Studionet chain `61999`; the user approved the wallet signature for the creation transaction.
+- Creation path: the user selected `PROCUREMENT_WORKING_FILES`, `MICROPURCHASE`, `OFFICIAL_RECORD`, and the assigned records officer, then submitted the form once.
+- Authoritative readback: profile `5`, nonce `MICRO-E2E-20260830-01`, owner `0x00870443049CB1D4A9a0F51913885433c701E01f`, state `DRAFT`, and event `19` `PROFILE_CREATED`.
+- Canonical attributes read from the on-chain dossier include `"procurement_type":"MICROPURCHASE"`; this closes the frontend/contract enum mismatch identified by the reviewer.
+- Regression after the correction: `48/48` frontend tests PASS; lint PASS; TypeScript PASS; production build PASS; `38` contract tests PASS; `git diff --check` PASS.
+
 ## Exact source and deployment
 
 - Source commit: `d4ffc520c54690324e17a5cf919fcc20e28bea77`
@@ -31,13 +41,13 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 ## Public release artifacts
 
 - GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
-- Exact GitHub commit: `b1b0c01c1d11eb3833971d0ad436a99fcc6159a7`
-- Exact GitHub tree: `9295c29c041692b74bedf2108159a8f8ef545e8c`
+- Exact GitHub commit: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`
+- Exact GitHub tree: `e619c2d0361f7427ba987f5269de642dd4c7b26d`
 - Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
 - Production URL: https://records-retention-disposition-gate.vercel.app
-- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/22qhwuy0a
-- Deployment ID: `dpl_6QxkxwNfxHFxBxjhogajvxxHk4nM`; target `production`; status `READY`
-- Exact-release E2E: the production page passed the independent OKX-wallet lifecycle and readback checks documented above, with each wallet connection and transaction signature approved by the user.
+- Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/7KDhbKJCmErxtmdT13NrT6Ftmdt1
+- Deployment ID: `dpl_7KDhbKJCmErxtmdT13NrT6Ftmdt1`; target `production`; status `READY`
+- Exact-release E2E: the production page passed the independent OKX-wallet creation path and authoritative readback documented above, with the user-approved signature and on-chain `MICROPURCHASE` attributes.
 
 ## Live Studio proof highlights
 

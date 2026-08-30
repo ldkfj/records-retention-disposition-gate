@@ -7,7 +7,7 @@ Records Retention Disposition Gate is a GenLayer application that maps frozen re
 - Studionet contract: [`0xE679...D61C`](https://explorer-studio.genlayer.com/address/0xE679b4345BF5AB03105A51Ef41743545139cD61C)
 - Deployment and recovery manifest: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 - Live proof: [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
-- GitHub revision: [`b1b0c01`](https://github.com/ldkfj/records-retention-disposition-gate/commit/b1b0c01c1d11eb3833971d0ad436a99fcc6159a7)
+- GitHub revision: [`3c088d3`](https://github.com/ldkfj/records-retention-disposition-gate/commit/3c088d34cddee52ee0ed8d5cf20d100a33a875f8)
 - Live web application: [`records-retention-disposition-gate.vercel.app`](https://records-retention-disposition-gate.vercel.app)
 
 ## Trust problem
