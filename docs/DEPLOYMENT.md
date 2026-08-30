@@ -16,9 +16,8 @@ Status: `PRINCIPAL LIVE VERIFIED — POST_DEPLOY_TEST APPROVED; USER-RUN VERCEL 
 - Auditor: `0x22A2906BB59A1DFaEEAD6148eba7dB24d6F22FB1`
 - Linked contracts: none
 - GitHub repository: `https://github.com/ldkfj/records-retention-disposition-gate`
-- Final GitHub HEAD: `f7581aa9ccf5a8af04e615d6637193ff779da794`
-- Final GitHub HEAD tree: `dd21f3f8606b0127baf9682dee4d2d649a2d52f7`
-- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8` (tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`); the final HEAD adds documentation-only evidence synchronization and no behavior change.
+- Final GitHub HEAD: the immutable commit containing this manifest (its parent evidence-manifest commit is `fc1394e4154db91d5fcc236a76628256ca7259a5`; the exact HEAD/tree are supplied in the final reviewer package).
+- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8` (tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`); all later commits are documentation-only evidence synchronization and contain no behavior change.
 - Vercel project: `https://vercel.com/gam9/records-retention-disposition-gate`
 - Production deployment: `https://records-retention-disposition-gate.vercel.app`
 - Deployment inspection: `https://vercel.com/gam9/records-retention-disposition-gate/rHYS9qMokjjn7Qd7TzZ3szhrfFg2`

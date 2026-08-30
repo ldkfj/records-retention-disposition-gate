@@ -42,9 +42,8 @@ Direct `gen_getContractCode` readback returned 67,927 bytes with SHA-256 `be5b05
 ## Public release artifacts
 
 - GitHub repository: https://github.com/ldkfj/records-retention-disposition-gate
-- Final GitHub HEAD: `76292baea388786fbde8b108b77ef2842acc0e35`
-- Final GitHub HEAD tree: `90261bdd38962ce95ec084538b1b06449b107330`
-- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`, tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`; final HEAD is a documentation-only wrapper.
+- Final GitHub HEAD: the immutable commit containing this manifest (parent evidence-manifest commit `fc1394e4154db91d5fcc236a76628256ca7259a5`; exact HEAD/tree are supplied in the final reviewer package).
+- Tested/deployed behavior parent: `3c088d34cddee52ee0ed8d5cf20d100a33a875f8`, tree `e619c2d0361f7427ba987f5269de642dd4c7b26d`; all later commits are documentation-only wrappers.
 - Vercel project: https://vercel.com/gam9/records-retention-disposition-gate
 - Production URL: https://records-retention-disposition-gate.vercel.app
 - Deployment inspection: https://vercel.com/gam9/records-retention-disposition-gate/rHYS9qMokjjn7Qd7TzZ3szhrfFg2
@@ -70,7 +69,7 @@ Weakness/blocker: None identified in the reviewed contract gate.
 
 Engineering: 4/5
 Evidence: Reproducible React/TypeScript and Python project, 48 frontend tests, 38 contract tests, lint/typecheck/build PASS, exact GitHub HEAD/tree and Vercel deployment identity.
-Exact evidence: final HEAD 76292baea388786fbde8b108b77ef2842acc0e35; deployment dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2.
+Exact evidence: final immutable HEAD is the commit containing this manifest; deployment dpl_rHYS9qMokjjn7Qd7TzZ3szhrfFg2.
 Weakness/blocker: Final package still needs the mandatory user-run Vercel E2E and same-release full-lifecycle evidence.
 
 Frontend / UX: 3/5
